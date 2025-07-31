@@ -45,15 +45,40 @@ export function useAuth() {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // First try to find profile by user_id
+      let { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", userId)
         .maybeSingle();
 
+      // If no profile found by user_id, try to find by email and link it
+      if (!data && !error) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email) {
+          const { data: profileByEmail, error: emailError } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("email", user.email)
+            .maybeSingle();
+
+          if (profileByEmail && !emailError) {
+            // Link the profile to the user
+            const { error: updateError } = await supabase
+              .from("profiles")
+              .update({ user_id: userId })
+              .eq("email", user.email);
+
+            if (!updateError) {
+              data = { ...profileByEmail, user_id: userId };
+            }
+          }
+        }
+      }
+
       if (error) {
         console.error("Error fetching profile:", error);
-      } else {
+      } else if (data) {
         setProfile(data as UserProfile);
       }
     } catch (error) {
