@@ -4,12 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface UserProfile {
   id: string;
-  user_id: string;
-  first_name: string | null;
-  last_name: string | null;
+  user_id: string | null;
+  full_name: string | null;
   role: "admin" | "student" | "lecturer";
+  email: string;
   created_at: string;
-  updated_at: string;
 }
 
 export function useAuth() {
@@ -46,16 +45,16 @@ export function useAuth() {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching profile:", error);
       } else {
-        setProfile(data);
+        setProfile(data as UserProfile);
       }
     } catch (error) {
       console.error("Error fetching profile:", error);

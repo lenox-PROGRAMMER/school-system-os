@@ -6,12 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 interface CreateUserFormData {
   email: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
   role: "student" | "lecturer";
 }
 
@@ -46,8 +45,7 @@ export function AdminDashboard() {
   const form = useForm<CreateUserFormData>({
     defaultValues: {
       email: "",
-      firstName: "",
-      lastName: "",
+      fullName: "",
       role: "student"
     }
   });
@@ -68,8 +66,7 @@ export function AdminDashboard() {
         password: password,
         email_confirm: true,
         user_metadata: {
-          first_name: data.firstName,
-          last_name: data.lastName,
+          full_name: data.fullName,
           role: data.role
         }
       });
@@ -78,6 +75,26 @@ export function AdminDashboard() {
         toast({
           title: "Error",
           description: authError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create profile entry
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert({
+          id: crypto.randomUUID(),
+          user_id: authData.user.id,
+          full_name: data.fullName,
+          email: data.email,
+          role: data.role
+        });
+
+      if (profileError) {
+        toast({
+          title: "Error",
+          description: profileError.message,
           variant: "destructive",
         });
         return;
@@ -123,35 +140,19 @@ export function AdminDashboard() {
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="firstName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>First Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter first name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="lastName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Last Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter last name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="fullName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter full name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   <FormField
                     control={form.control}

@@ -56,7 +56,7 @@ const Index = () => {
         </div>
         <div className="text-center">
           <h2 className="text-2xl font-semibold mb-2">
-            Welcome, {profile.first_name} {profile.last_name}!
+            Welcome, {profile.full_name || 'User'}!
           </h2>
           <p className="text-muted-foreground">Your dashboard is ready.</p>
         </div>
