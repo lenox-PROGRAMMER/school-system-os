@@ -14,7 +14,6 @@ interface CreateUserFormData {
   role: "student" | "lecturer" | "admin";
 }
 
-
 export function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState("");
@@ -48,26 +47,31 @@ export function AdminDashboard() {
         return;
       }
 
-      // Call edge function to create user
-      const response = await fetch('/functions/v1/create-user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
+      // Call the edge function to create user
+      const { data: result, error } = await supabase.functions.invoke('create-user', {
+        body: {
           email: data.email,
           fullName: data.fullName,
           role: data.role
-        }),
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
+      if (error) {
         toast({
           title: "Error",
-          description: result.error || "Failed to create user",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (result.error) {
+        toast({
+          title: "Error",
+          description: result.error,
           variant: "destructive",
         });
         return;
