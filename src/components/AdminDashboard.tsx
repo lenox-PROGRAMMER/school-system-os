@@ -11,32 +11,9 @@ import { toast } from "@/hooks/use-toast";
 interface CreateUserFormData {
   email: string;
   fullName: string;
-  role: "student" | "lecturer";
+  role: "student" | "lecturer" | "admin";
 }
 
-// Password generator function with required complexity
-function generateSecurePassword(): string {
-  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const lowercase = "abcdefghijklmnopqrstuvwxyz";
-  const numbers = "0123456789";
-  const special = "!@#$%^&*";
-  
-  // Ensure at least one character from each category
-  let password = "";
-  password += uppercase[Math.floor(Math.random() * uppercase.length)];
-  password += lowercase[Math.floor(Math.random() * lowercase.length)];
-  password += numbers[Math.floor(Math.random() * numbers.length)];
-  password += special[Math.floor(Math.random() * special.length)];
-  
-  // Fill remaining 4 characters randomly
-  const allChars = uppercase + lowercase + numbers + special;
-  for (let i = 4; i < 8; i++) {
-    password += allChars[Math.floor(Math.random() * allChars.length)];
-  }
-  
-  // Shuffle the password
-  return password.split('').sort(() => Math.random() - 0.5).join('');
-}
 
 export function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(false);
@@ -57,58 +34,55 @@ export function AdminDashboard() {
 
   const onSubmit = async (data: CreateUserFormData) => {
     setIsLoading(true);
-    const password = generateSecurePassword();
     
     try {
-      // Create user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: data.email,
-        password: password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: data.fullName,
+      // Get current session for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to create users",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Call edge function to create user
+      const response = await fetch('/functions/v1/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          email: data.email,
+          fullName: data.fullName,
           role: data.role
-        }
+        }),
       });
 
-      if (authError) {
+      const result = await response.json();
+
+      if (!response.ok) {
         toast({
           title: "Error",
-          description: authError.message,
+          description: result.error || "Failed to create user",
           variant: "destructive",
         });
         return;
       }
 
-      // Create profile entry
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({
-          id: crypto.randomUUID(),
-          user_id: authData.user.id,
-          full_name: data.fullName,
-          email: data.email,
-          role: data.role
-        });
-
-      if (profileError) {
-        toast({
-          title: "Error",
-          description: profileError.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setGeneratedPassword(password);
+      setGeneratedPassword(result.password);
       form.reset();
       
       toast({
         title: "Success",
-        description: `${data.role} created successfully! Password: ${password}`,
+        description: result.message,
       });
       
     } catch (error) {
+      console.error('Error creating user:', error);
       toast({
         title: "Error",
         description: "Failed to create user",
@@ -183,6 +157,7 @@ export function AdminDashboard() {
                           <SelectContent>
                             <SelectItem value="student">Student</SelectItem>
                             <SelectItem value="lecturer">Lecturer</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />

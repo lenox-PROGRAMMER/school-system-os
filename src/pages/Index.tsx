@@ -1,8 +1,9 @@
 import { LoginForm } from "@/components/LoginForm";
 import { AdminDashboard } from "@/components/AdminDashboard";
+import { StudentDashboard } from "@/components/StudentDashboard";
+import { LecturerDashboard } from "@/components/LecturerDashboard";
 import { useAuth } from "@/hooks/useAuth";
 import { Toaster } from "@/components/ui/toaster";
-import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const { user, profile, loading } = useAuth();
@@ -36,29 +37,33 @@ const Index = () => {
     );
   }
 
-  // Student and Lecturer dashboards (placeholder for now)
+  if (profile.role === "student") {
+    return (
+      <>
+        <StudentDashboard />
+        <Toaster />
+      </>
+    );
+  }
+
+  if (profile.role === "lecturer") {
+    return (
+      <>
+        <LecturerDashboard />
+        <Toaster />
+      </>
+    );
+  }
+
+  // Fallback for any other role
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">
-            {profile.role === "student" ? "Student" : "Lecturer"} Dashboard
-          </h1>
-          <button 
-            onClick={() => {
-              supabase.auth.signOut();
-              window.location.reload();
-            }}
-            className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
-          >
-            Logout
-          </button>
-        </div>
         <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">
-            Welcome, {profile.full_name || 'User'}!
-          </h2>
-          <p className="text-muted-foreground">Your dashboard is ready.</p>
+          <h1 className="text-3xl font-bold mb-4">Welcome, {profile.full_name || 'User'}!</h1>
+          <p className="text-lg text-muted-foreground">
+            You are logged in as a {profile.role}.
+          </p>
         </div>
       </div>
       <Toaster />
