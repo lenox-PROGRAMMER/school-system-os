@@ -49,18 +49,25 @@ export function AdminDashboard() {
       }
 
       // Call edge function to create user
-      const { data: result, error: functionError } = await supabase.functions.invoke('create-user', {
-        body: {
+      const response = await fetch('/functions/v1/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
           email: data.email,
           fullName: data.fullName,
           role: data.role
-        },
+        }),
       });
 
-      if (functionError || result?.error) {
+      const result = await response.json();
+
+      if (!response.ok) {
         toast({
           title: "Error",
-          description: result?.error || functionError?.message || "Failed to create user",
+          description: result.error || "Failed to create user",
           variant: "destructive",
         });
         return;
