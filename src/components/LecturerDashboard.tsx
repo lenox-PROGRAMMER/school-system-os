@@ -1,7 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { LecturerCourses } from "@/components/LecturerCourses";
+import { LecturerAssignments } from "@/components/LecturerAssignments";
+import { LecturerStudents } from "@/components/LecturerStudents";
 
 export function LecturerDashboard() {
   const { profile } = useAuth();
@@ -13,7 +17,7 @@ export function LecturerDashboard() {
 
   return (
     <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Lecturer Dashboard</h1>
           <Button onClick={handleLogout} variant="outline">
@@ -21,16 +25,16 @@ export function LecturerDashboard() {
           </Button>
         </div>
 
-        <div className="grid gap-6">
+        <div className="grid gap-6 mb-8">
           <Card>
             <CardHeader>
               <CardTitle>Welcome, {profile?.full_name}!</CardTitle>
               <CardDescription>
-                You are logged in as a lecturer.
+                Manage your courses, assignments, and students.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
                   <p className="font-medium">{profile?.email}</p>
@@ -42,21 +46,27 @@ export function LecturerDashboard() {
               </div>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>
-                Lecturer features will be available here.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Lecturer-specific features and content will be added here based on your requirements.
-              </p>
-            </CardContent>
-          </Card>
         </div>
+
+        <Tabs defaultValue="courses" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="courses">My Courses</TabsTrigger>
+            <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            <TabsTrigger value="students">Students</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="courses">
+            <LecturerCourses />
+          </TabsContent>
+
+          <TabsContent value="assignments">
+            <LecturerAssignments />
+          </TabsContent>
+
+          <TabsContent value="students">
+            <LecturerStudents />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
