@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_calendar: {
+        Row: {
+          academic_year: string
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string | null
+          event_type: string
+          id: string
+          semester: string | null
+          start_date: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date?: string | null
+          event_type: string
+          id?: string
+          semester?: string | null
+          start_date: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string | null
+          event_type?: string
+          id?: string
+          semester?: string | null
+          start_date?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       assignments: {
         Row: {
           course_id: string
@@ -154,6 +196,33 @@ export type Database = {
           },
         ]
       }
+      hostels: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          total_rooms: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          total_rooms?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          total_rooms?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -178,6 +247,144 @@ export type Database = {
           id?: string
           role?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      results: {
+        Row: {
+          academic_year: string
+          audited_at: string | null
+          audited_by: string | null
+          course_id: string
+          created_at: string
+          gpa: number | null
+          grade: string | null
+          id: string
+          points: number | null
+          published_at: string | null
+          published_by: string | null
+          semester: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          audited_at?: string | null
+          audited_by?: string | null
+          course_id: string
+          created_at?: string
+          gpa?: number | null
+          grade?: string | null
+          id?: string
+          points?: number | null
+          published_at?: string | null
+          published_by?: string | null
+          semester: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          audited_at?: string | null
+          audited_by?: string | null
+          course_id?: string
+          created_at?: string
+          gpa?: number | null
+          grade?: string | null
+          id?: string
+          points?: number | null
+          published_at?: string | null
+          published_by?: string | null
+          semester?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      room_bookings: {
+        Row: {
+          academic_year: string | null
+          admin_response: string | null
+          booking_date: string
+          created_at: string
+          id: string
+          responded_at: string | null
+          responded_by: string | null
+          room_id: string
+          semester: string | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year?: string | null
+          admin_response?: string | null
+          booking_date?: string
+          created_at?: string
+          id?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          room_id: string
+          semester?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string | null
+          admin_response?: string | null
+          booking_date?: string
+          created_at?: string
+          id?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          room_id?: string
+          semester?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rooms: {
+        Row: {
+          amenities: string[] | null
+          capacity: number
+          created_at: string
+          hostel_id: string
+          id: string
+          occupied: number
+          price: number | null
+          room_number: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amenities?: string[] | null
+          capacity?: number
+          created_at?: string
+          hostel_id: string
+          id?: string
+          occupied?: number
+          price?: number | null
+          room_number: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amenities?: string[] | null
+          capacity?: number
+          created_at?: string
+          hostel_id?: string
+          id?: string
+          occupied?: number
+          price?: number | null
+          room_number?: string
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
