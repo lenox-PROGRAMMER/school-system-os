@@ -19,6 +19,7 @@ interface Profile {
   role: string;
   created_at: string;
   user_id: string | null;
+  lecturer_id: string | null;
 }
 
 interface Course {
@@ -117,6 +118,7 @@ export function UserManagement({ userType }: UserManagementProps) {
           full_name: editingProfile.full_name,
           email: editingProfile.email,
           role: editingProfile.role,
+          lecturer_id: editingProfile.role === 'student' && selectedLecturer ? selectedLecturer : null,
         })
         .eq('id', editingProfile.id);
 
@@ -132,16 +134,6 @@ export function UserManagement({ userType }: UserManagementProps) {
               course_id: courseId,
               status: 'active'
             });
-        }
-      }
-
-      // Handle lecturer assignment for students
-      if (editingProfile.role === 'student' && selectedLecturer) {
-        for (const courseId of selectedCourses) {
-          await supabase
-            .from('courses')
-            .update({ lecturer_id: selectedLecturer })
-            .eq('id', courseId);
         }
       }
 
@@ -223,6 +215,11 @@ export function UserManagement({ userType }: UserManagementProps) {
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">{profile.email}</p>
+                {profile.role === 'student' && profile.lecturer_id && (
+                  <p className="text-xs text-muted-foreground">
+                    Lecturer: {profiles.find(p => p.id === profile.lecturer_id)?.full_name || 'Assigned'}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   Created: {new Date(profile.created_at).toLocaleDateString()}
                 </p>
@@ -306,11 +303,11 @@ export function UserManagement({ userType }: UserManagementProps) {
                                   <SelectValue placeholder="Select lecturer" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {profiles.filter(p => p.role === 'lecturer').map((lecturer) => (
-                                    <SelectItem key={lecturer.user_id} value={lecturer.user_id || ''}>
-                                      {lecturer.full_name || lecturer.email}
-                                    </SelectItem>
-                                  ))}
+                                   {profiles.filter(p => p.role === 'lecturer').map((lecturer) => (
+                                     <SelectItem key={lecturer.id} value={lecturer.id}>
+                                       {lecturer.full_name || lecturer.email}
+                                     </SelectItem>
+                                   ))}
                                 </SelectContent>
                               </Select>
                             </div>

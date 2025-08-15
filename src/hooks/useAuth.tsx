@@ -9,6 +9,7 @@ interface UserProfile {
   role: "admin" | "student" | "lecturer";
   email: string;
   created_at: string;
+  lecturer_id: string | null;
 }
 
 export function useAuth() {

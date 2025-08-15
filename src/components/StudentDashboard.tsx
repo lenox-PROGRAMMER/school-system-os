@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { StudentCourses } from "@/components/StudentCourses";
 import { StudentAssignments } from "@/components/StudentAssignments";
 import { StudentGrades } from "@/components/StudentGrades";
+import { StudentOverview } from "@/components/StudentOverview";
 
 export function StudentDashboard() {
   const { profile } = useAuth();
@@ -48,12 +49,17 @@ export function StudentDashboard() {
           </Card>
         </div>
 
-        <Tabs defaultValue="courses" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="courses">My Courses</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
-            <TabsTrigger value="grades">Grades</TabsTrigger>
+            <TabsTrigger value="grades">Results</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="overview">
+            <StudentOverview />
+          </TabsContent>
 
           <TabsContent value="courses">
             <StudentCourses />

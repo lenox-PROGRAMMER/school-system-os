@@ -172,12 +172,23 @@ export function ResultsManagement() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      const { data: adminProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!adminProfile) throw new Error('Admin profile not found');
+
       const { error } = await supabase
         .from('results')
         .update({
           status: 'published',
-          published_by: user.id,
-          published_at: new Date().toISOString()
+          published_by: adminProfile.id,
+          published_at: new Date().toISOString(),
+          forwarded_at: new Date().toISOString(),
+          forwarded_by: adminProfile.id,
+          student_notified: false
         })
         .eq('id', resultId);
 
@@ -185,7 +196,7 @@ export function ResultsManagement() {
 
       toast({
         title: "Success",
-        description: "Result published successfully",
+        description: "Result published and forwarded to student successfully",
       });
 
       fetchData();

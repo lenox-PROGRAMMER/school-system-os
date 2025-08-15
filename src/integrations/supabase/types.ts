@@ -229,6 +229,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          lecturer_id: string | null
           role: string
           user_id: string | null
         }
@@ -237,6 +238,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          lecturer_id?: string | null
           role?: string
           user_id?: string | null
         }
@@ -245,10 +247,19 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          lecturer_id?: string | null
           role?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_lecturer_id_fkey"
+            columns: ["lecturer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       results: {
         Row: {
@@ -257,6 +268,8 @@ export type Database = {
           audited_by: string | null
           course_id: string
           created_at: string
+          forwarded_at: string | null
+          forwarded_by: string | null
           gpa: number | null
           grade: string | null
           id: string
@@ -266,6 +279,7 @@ export type Database = {
           semester: string
           status: string
           student_id: string
+          student_notified: boolean | null
           updated_at: string
         }
         Insert: {
@@ -274,6 +288,8 @@ export type Database = {
           audited_by?: string | null
           course_id: string
           created_at?: string
+          forwarded_at?: string | null
+          forwarded_by?: string | null
           gpa?: number | null
           grade?: string | null
           id?: string
@@ -283,6 +299,7 @@ export type Database = {
           semester: string
           status?: string
           student_id: string
+          student_notified?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -291,6 +308,8 @@ export type Database = {
           audited_by?: string | null
           course_id?: string
           created_at?: string
+          forwarded_at?: string | null
+          forwarded_by?: string | null
           gpa?: number | null
           grade?: string | null
           id?: string
@@ -300,9 +319,18 @@ export type Database = {
           semester?: string
           status?: string
           student_id?: string
+          student_notified?: boolean | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "results_forwarded_by_fkey"
+            columns: ["forwarded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       room_bookings: {
         Row: {
@@ -414,6 +442,68 @@ export type Database = {
           {
             foreignKeyName: "school_data_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_hostel_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string
+          hostel_id: string
+          id: string
+          notes: string | null
+          room_id: string | null
+          status: string
+          student_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by: string
+          hostel_id: string
+          id?: string
+          notes?: string | null
+          room_id?: string | null
+          status?: string
+          student_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string
+          hostel_id?: string
+          id?: string
+          notes?: string | null
+          room_id?: string | null
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_hostel_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_hostel_assignments_hostel_id_fkey"
+            columns: ["hostel_id"]
+            isOneToOne: false
+            referencedRelation: "hostels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_hostel_assignments_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_hostel_assignments_student_id_fkey"
+            columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
