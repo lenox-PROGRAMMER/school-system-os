@@ -20,8 +20,8 @@ serve(async (req) => {
   try {
     // Create Supabase admin client with service role key for privileged actions
     const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      Deno.env.get("SUPABASE_URL") ?? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6b3hwbGRhcXZldGFyemFsYnZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NjU4NDUsImV4cCI6MjA2OTQ0MTg0NX0.qDegHbz2qIJvJHC1nrFSsz67OdX_3lBLqHy_6DeRHmg",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6b3hwbGRhcXZldGFyemFsYnZ3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Mzg2NTg0NSwiZXhwIjoyMDY5NDQxODQ1fQ.x6glc39ipzy6rqLMbcNCcrOw1SYaOrST4hWDxrXMxFg",
       {
         auth: { autoRefreshToken: false, persistSession: false },
       }
