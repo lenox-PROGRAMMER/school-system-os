@@ -3,10 +3,29 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -38,8 +57,10 @@ export function CreateUserForm() {
     setGeneratedPassword(null);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session) {
         toast({
           title: "Error",
@@ -49,7 +70,7 @@ export function CreateUserForm() {
         return;
       }
 
-      const { data: result, error } = await supabase.functions.invoke('create-user', {
+      const { data: result, error } = await supabase.functions.invoke("createUser", {
         body: {
           email: data.email,
           fullName: data.fullName,
@@ -57,11 +78,14 @@ export function CreateUserForm() {
         },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
         },
       });
 
+      console.log("Function result:", result);
+
       if (error) {
-        console.error('Edge function error:', error);
+        console.error("Edge function error:", error);
         toast({
           title: "Error",
           description: "Failed to create user. Please try again.",
@@ -79,7 +103,7 @@ export function CreateUserForm() {
         form.reset();
       }
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error("Error creating user:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
