@@ -2,48 +2,48 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // You can restrict this to your domain in production
+  "Access-Control-Allow-Origin": "*", // no backslash here
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 serve(async (req) => {
-  // Handle CORS preflight request
+  // Respond to OPTIONS preflight request first
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   if (req.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405, headers: corsHeaders });
+    return new Response("Method Not Allowed", {
+      status: 405,
+      headers: corsHeaders,
+    });
   }
 
   try {
-    // Create Supabase admin client with service role key for privileged actions
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      {
-        auth: { autoRefreshToken: false, persistSession: false },
-      }
+      { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Create regular client to verify the requesting user
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    // Get Authorization header and validate presence
     const authHeader = req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return new Response(
-        JSON.stringify({ error: "Unauthorized: Missing or invalid Authorization header" }),
+        JSON.stringify({
+          error: "Unauthorized: Missing or invalid Authorization header",
+        }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
     const token = authHeader.replace("Bearer ", "");
 
-    // Verify authenticated user with token
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
     if (authError || !user) {
       return new Response(
@@ -52,7 +52,6 @@ serve(async (req) => {
       );
     }
 
-    // Check if the authenticated user has admin role
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("role")
@@ -66,7 +65,6 @@ serve(async (req) => {
       );
     }
 
-    // Parse and validate request body
     const { email, fullName, role } = await req.json();
 
     if (!email || !fullName || !role) {
@@ -83,7 +81,6 @@ serve(async (req) => {
       );
     }
 
-    // Secure password generator
     const generateSecurePassword = (): string => {
       const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
       const lowercase = "abcdefghijklmnopqrstuvwxyz";
@@ -106,14 +103,13 @@ serve(async (req) => {
 
     const password = generateSecurePassword();
 
-    // Create the new user with the admin client
     const { data: authData, error: authError2 } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
       user_metadata: {
         full_name: fullName,
-        role: role,
+        role,
       },
     });
 
@@ -125,15 +121,14 @@ serve(async (req) => {
       );
     }
 
-    // Insert profile record in 'profiles' table (adjust table and fields as needed)
     const { error: profileError2 } = await supabaseAdmin
       .from("profiles")
       .insert({
         id: crypto.randomUUID(),
         user_id: authData.user.id,
         full_name: fullName,
-        email: email,
-        role: role,
+        email,
+        role,
       });
 
     if (profileError2) {
@@ -144,16 +139,15 @@ serve(async (req) => {
       );
     }
 
-    // Successfully created user and profile
     return new Response(
       JSON.stringify({
         message: `${role} created successfully!`,
-        password: password,
+        password,
         user: {
           id: authData.user.id,
-          email: email,
+          email,
           full_name: fullName,
-          role: role,
+          role,
         },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
