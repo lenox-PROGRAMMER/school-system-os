@@ -36,6 +36,7 @@ const createUserSchema = z.object({
     required_error: "Please select a role",
   }),
 });
+
 type CreateUserFormData = z.infer<typeof createUserSchema>;
 
 export function CreateUserForm() {
@@ -180,7 +181,6 @@ export function CreateUserForm() {
             </Button>
           </form>
         </Form>
-
         {generatedPassword && (
           <div className="mt-6 p-4 bg-muted rounded-lg">
             <h3 className="font-semibold text-sm mb-2">Generated Password</h3>
