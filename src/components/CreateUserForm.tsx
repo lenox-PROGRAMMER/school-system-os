@@ -36,7 +36,6 @@ const createUserSchema = z.object({
     required_error: "Please select a role",
   }),
 });
-
 type CreateUserFormData = z.infer<typeof createUserSchema>;
 
 export function CreateUserForm() {
@@ -67,22 +66,21 @@ export function CreateUserForm() {
           description: "You must be logged in to create users",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
 
       const response = await supabase.functions.invoke("createUser", {
-        body: {
+        body: JSON.stringify({
           email: data.email,
           fullName: data.fullName,
           role: data.role,
-        },
+        }),
         headers: {
           Authorization: `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
         },
       });
-
-      console.log("Full response:", response);
 
       if (response.error) {
         toast({
@@ -90,6 +88,7 @@ export function CreateUserForm() {
           description: response.error.message || "Failed to create user.",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
 
@@ -142,7 +141,6 @@ export function CreateUserForm() {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="email"
@@ -156,7 +154,6 @@ export function CreateUserForm() {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="role"
@@ -178,7 +175,6 @@ export function CreateUserForm() {
                 </FormItem>
               )}
             />
-
             <Button type="submit" disabled={isLoading} className="w-full">
               {isLoading ? "Creating..." : "Create User"}
             </Button>
@@ -195,7 +191,7 @@ export function CreateUserForm() {
               Please save this password and share it securely with the user.
             </p>
           </div>
-        )}        
+        )}
       </CardContent>
     </Card>
   );
