@@ -70,7 +70,7 @@ export function CreateUserForm() {
         return;
       }
 
-      const { data: result, error } = await supabase.functions.invoke("createUser", {
+      const response = await supabase.functions.invoke("createUser", {
         body: {
           email: data.email,
           fullName: data.fullName,
@@ -82,25 +82,29 @@ export function CreateUserForm() {
         },
       });
 
-      console.log("Function result:", result);
+      console.log("Full response:", response);
 
-      if (error) {
-        console.error("Edge function error:", error);
+      if (response.error) {
         toast({
           title: "Error",
-          description: "Failed to create user. Please try again.",
+          description: response.error.message || "Failed to create user.",
           variant: "destructive",
         });
         return;
       }
 
-      if (result?.password) {
-        setGeneratedPassword(result.password);
+      if (response.data?.password) {
+        setGeneratedPassword(response.data.password);
         toast({
           title: "Success",
-          description: `User created successfully! Password: ${result.password}`,
+          description: `User created successfully! Password: ${response.data.password}`,
         });
         form.reset();
+      } else {
+        toast({
+          title: "Warning",
+          description: "User created, but no password was returned.",
+        });
       }
     } catch (error) {
       console.error("Error creating user:", error);
