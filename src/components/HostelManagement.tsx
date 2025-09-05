@@ -172,19 +172,20 @@ export function HostelManagement() {
       
       setBookings(bookingsWithNames as RoomBooking[]);
       
-      // Process assignments with student names
-      const assignmentsWithNames = (assignmentsResult.data || []).map((assignment: any) => {
-        const student = studentsResult.data?.find(s => s.id === assignment.student_id);
-        const hostel = hostelsResult.data?.find(h => h.id === assignment.hostel_id);
-        const room = roomsResult.data?.find(r => r.id === assignment.room_id);
-        
-        return {
-          ...assignment,
-          student_name: student?.full_name || 'Unknown',
-          hostel_name: hostel?.name || 'Unknown',
-          room_number: room?.room_number || 'N/A'
-        };
-      });
+        // Process assignments with names from students data
+        const assignmentsWithNames = (assignmentsResult.data || []).map((assignment: any) => {
+          const student = studentsResult.data?.find(s => s.id === assignment.student_id);
+          const hostel = hostelsResult.data?.find(h => h.id === assignment.hostel_id);
+          const room = roomsResult.data?.find(r => r.id === assignment.room_id);
+          
+          return {
+            ...assignment,
+            student_name: student?.full_name || student?.email || 'Unknown Student',
+            student_email: student?.email || 'Unknown',
+            hostel_name: hostel?.name || 'Unknown',
+            room_number: room?.room_number || 'N/A'
+          };
+        });
       
       setHostelAssignments(assignmentsWithNames);
     } catch (error: any) {
@@ -631,23 +632,23 @@ export function HostelManagement() {
                   <div key={assignment.id} className="border rounded-lg p-4">
                     <div className="flex justify-between items-start">
                       <div className="space-y-2">
-                        <div>
-                          <h3 className="font-semibold">
-                            {assignment.profiles?.full_name || assignment.profiles?.email}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {assignment.profiles?.email}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm">
-                            Hostel: {assignment.hostels?.name}
-                          </p>
-                          {assignment.rooms && (
-                            <p className="text-sm text-muted-foreground">
-                              Room: {assignment.rooms.room_number}
-                            </p>
-                          )}
+                         <div>
+                           <h3 className="font-semibold">
+                             {assignment.student_name}
+                           </h3>
+                           <p className="text-sm text-muted-foreground">
+                             {assignment.student_email}
+                           </p>
+                         </div>
+                         <div>
+                           <p className="text-sm">
+                             Hostel: {assignment.hostel_name}
+                           </p>
+                           {assignment.room_number !== 'N/A' && (
+                             <p className="text-sm text-muted-foreground">
+                               Room: {assignment.room_number}
+                             </p>
+                           )}
                           <p className="text-sm text-muted-foreground">
                             Assigned: {new Date(assignment.assigned_at).toLocaleDateString()}
                           </p>
