@@ -82,48 +82,116 @@ export function HostelManagement() {
 
   const fetchData = async () => {
     try {
-      const [hostelsResult, roomsResult, bookingsResult, studentsResult, assignmentsResult] = await Promise.all([
-        supabase.from('hostels').select('*').order('created_at', { ascending: false }),
-        supabase.from('rooms').select('*').order('created_at', { ascending: false }),
-        supabase
-          .from('room_bookings')
-          .select(`
-            *,
-            profiles!room_bookings_student_id_fkey(full_name, email),
-            rooms(room_number, hostels(name))
-          `)
-          .order('booking_date', { ascending: false }),
-        supabase
-          .from('profiles')
-          .select('id, user_id, full_name, email')
-          .eq('role', 'student'),
-        supabase
-          .from('student_hostel_assignments')
-          .select(`
-            *,
-            profiles!student_hostel_assignments_student_id_fkey(full_name, email),
-            hostels(name),
-            rooms(room_number)
-          `)
-          .order('assigned_at', { ascending: false })
-      ]);
+      // Fetch hostels first
+      const hostelsResult = await supabase
+        .from('hostels')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      if (hostelsResult.error) throw hostelsResult.error;
-      if (roomsResult.error) throw roomsResult.error;
-      if (bookingsResult.error) throw bookingsResult.error;
-      if (studentsResult.error) throw studentsResult.error;
-      if (assignmentsResult.error) throw assignmentsResult.error;
+      if (hostelsResult.error) {
+        console.error('Hostels error:', hostelsResult.error);
+        throw hostelsResult.error;
+      }
+
+      // Fetch rooms
+      const roomsResult = await supabase
+        .from('rooms')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (roomsResult.error) {
+        console.error('Rooms error:', roomsResult.error);
+        throw roomsResult.error;
+      }
+
+      // Fetch students
+      const studentsResult = await supabase
+        .from('profiles')
+        .select('id, user_id, full_name, email')
+        .eq('role', 'student');
+
+      if (studentsResult.error) {
+        console.error('Students error:', studentsResult.error);
+        throw studentsResult.error;
+      }
+
+      // Fetch bookings with simplified join
+      const bookingsResult = await supabase
+        .from('room_bookings')
+        .select(`
+          id,
+          student_id,
+          room_id,
+          booking_date,
+          status,
+          admin_response,
+          academic_year,
+          semester
+        `)
+        .order('booking_date', { ascending: false });
+
+      // Fetch assignments with simplified join
+      const assignmentsResult = await supabase
+        .from('student_hostel_assignments')
+        .select(`
+          id,
+          student_id,
+          hostel_id,
+          room_id,
+          assigned_by,
+          assigned_at,
+          notes,
+          status
+        `)
+        .order('assigned_at', { ascending: false });
 
       setHostels(hostelsResult.data || []);
       setRooms(roomsResult.data as Room[] || []);
-      setBookings(bookingsResult.data as unknown as RoomBooking[] || []);
       setStudents(studentsResult.data || []);
-      setHostelAssignments(assignmentsResult.data || []);
-    } catch (error) {
+      
+      // Process bookings with student names
+      const bookingsWithNames = (bookingsResult.data || []).map((booking: any) => {
+        const student = studentsResult.data?.find(s => s.user_id === booking.student_id);
+        const room = roomsResult.data?.find(r => r.id === booking.room_id);
+        const hostel = hostelsResult.data?.find(h => h.id === room?.hostel_id);
+        
+        return {
+          ...booking,
+          profiles: {
+            full_name: student?.full_name || null,
+            email: student?.email || 'Unknown'
+          },
+          rooms: {
+            room_number: room?.room_number || 'Unknown',
+            hostels: {
+              name: hostel?.name || 'Unknown'
+            }
+          }
+        };
+      });
+      
+      setBookings(bookingsWithNames as RoomBooking[]);
+      
+      // Process assignments with student names
+      const assignmentsWithNames = (assignmentsResult.data || []).map((assignment: any) => {
+        const student = studentsResult.data?.find(s => s.id === assignment.student_id);
+        const hostel = hostelsResult.data?.find(h => h.id === assignment.hostel_id);
+        const room = roomsResult.data?.find(r => r.id === assignment.room_id);
+        
+        return {
+          ...assignment,
+          student_name: student?.full_name || 'Unknown',
+          hostel_name: hostel?.name || 'Unknown',
+          room_number: room?.room_number || 'N/A'
+        };
+      });
+      
+      setHostelAssignments(assignmentsWithNames);
+    } catch (error: any) {
       console.error('Error fetching data:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch hostel data",
+        description: `Failed to fetch hostel data: ${error?.message || 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {
@@ -239,7 +307,7 @@ export function HostelManagement() {
       const { error } = await supabase
         .from('student_hostel_assignments')
         .insert([{
-          student_id: newAssignment.student_id,
+          student_id: newAssignment.student_id, // This should be profile.id, not user_id
           hostel_id: newAssignment.hostel_id,
           room_id: newAssignment.room_id || null,
           assigned_by: adminProfile.id,
