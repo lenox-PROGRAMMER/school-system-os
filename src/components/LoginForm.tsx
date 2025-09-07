@@ -44,7 +44,7 @@ export function LoginForm() {
           title: "Success",
           description: "Logged in successfully!",
         });
-        window.location.reload();
+        // No need to reload - useAuth hook will handle the redirect automatically
       }
     } catch (error) {
       toast({
