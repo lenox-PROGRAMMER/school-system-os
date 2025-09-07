@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { CreateUserForm } from "@/components/createUserForm";
+import { CreateUserForm } from "@/components/CreateUserForm";
 import { UserManagement } from "@/components/UserManagement";
 import { CourseManagement } from "@/components/CourseManagement";
 import { SchoolDataManagement } from "@/components/SchoolDataManagement";

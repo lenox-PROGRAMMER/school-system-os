@@ -57,8 +57,6 @@ export function HostelManagement() {
   const [hostels, setHostels] = useState<Hostel[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [bookings, setBookings] = useState<RoomBooking[]>([]);
-  const [students, setStudents] = useState<any[]>([]);
-  const [hostelAssignments, setHostelAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newHostel, setNewHostel] = useState({ name: '', description: '', total_rooms: 0 });
   const [newRoom, setNewRoom] = useState({
@@ -69,12 +67,6 @@ export function HostelManagement() {
     amenities: '',
     status: 'available' as const
   });
-  const [newAssignment, setNewAssignment] = useState({
-    student_id: '',
-    hostel_id: '',
-    room_id: '',
-    notes: ''
-  });
 
   useEffect(() => {
     fetchData();
@@ -82,117 +74,31 @@ export function HostelManagement() {
 
   const fetchData = async () => {
     try {
-      // Fetch hostels first
-      const hostelsResult = await supabase
-        .from('hostels')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const [hostelsResult, roomsResult, bookingsResult] = await Promise.all([
+        supabase.from('hostels').select('*').order('created_at', { ascending: false }),
+        supabase.from('rooms').select('*').order('created_at', { ascending: false }),
+        supabase
+          .from('room_bookings')
+          .select(`
+            *,
+            profiles!room_bookings_student_id_fkey(full_name, email),
+            rooms(room_number, hostels(name))
+          `)
+          .order('booking_date', { ascending: false })
+      ]);
 
-      if (hostelsResult.error) {
-        console.error('Hostels error:', hostelsResult.error);
-        throw hostelsResult.error;
-      }
-
-      // Fetch rooms
-      const roomsResult = await supabase
-        .from('rooms')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (roomsResult.error) {
-        console.error('Rooms error:', roomsResult.error);
-        throw roomsResult.error;
-      }
-
-      // Fetch students
-      const studentsResult = await supabase
-        .from('profiles')
-        .select('id, user_id, full_name, email')
-        .eq('role', 'student');
-
-      if (studentsResult.error) {
-        console.error('Students error:', studentsResult.error);
-        throw studentsResult.error;
-      }
-
-      // Fetch bookings with simplified join
-      const bookingsResult = await supabase
-        .from('room_bookings')
-        .select(`
-          id,
-          student_id,
-          room_id,
-          booking_date,
-          status,
-          admin_response,
-          academic_year,
-          semester
-        `)
-        .order('booking_date', { ascending: false });
-
-      // Fetch assignments with simplified join
-      const assignmentsResult = await supabase
-        .from('student_hostel_assignments')
-        .select(`
-          id,
-          student_id,
-          hostel_id,
-          room_id,
-          assigned_by,
-          assigned_at,
-          notes,
-          status
-        `)
-        .order('assigned_at', { ascending: false });
+      if (hostelsResult.error) throw hostelsResult.error;
+      if (roomsResult.error) throw roomsResult.error;
+      if (bookingsResult.error) throw bookingsResult.error;
 
       setHostels(hostelsResult.data || []);
       setRooms(roomsResult.data as Room[] || []);
-      setStudents(studentsResult.data || []);
-      
-      // Process bookings with student names
-      const bookingsWithNames = (bookingsResult.data || []).map((booking: any) => {
-        const student = studentsResult.data?.find(s => s.user_id === booking.student_id);
-        const room = roomsResult.data?.find(r => r.id === booking.room_id);
-        const hostel = hostelsResult.data?.find(h => h.id === room?.hostel_id);
-        
-        return {
-          ...booking,
-          profiles: {
-            full_name: student?.full_name || null,
-            email: student?.email || 'Unknown'
-          },
-          rooms: {
-            room_number: room?.room_number || 'Unknown',
-            hostels: {
-              name: hostel?.name || 'Unknown'
-            }
-          }
-        };
-      });
-      
-      setBookings(bookingsWithNames as RoomBooking[]);
-      
-        // Process assignments with names from students data
-        const assignmentsWithNames = (assignmentsResult.data || []).map((assignment: any) => {
-          const student = studentsResult.data?.find(s => s.id === assignment.student_id);
-          const hostel = hostelsResult.data?.find(h => h.id === assignment.hostel_id);
-          const room = roomsResult.data?.find(r => r.id === assignment.room_id);
-          
-          return {
-            ...assignment,
-            student_name: student?.full_name || student?.email || 'Unknown Student',
-            student_email: student?.email || 'Unknown',
-            hostel_name: hostel?.name || 'Unknown',
-            room_number: room?.room_number || 'N/A'
-          };
-        });
-      
-      setHostelAssignments(assignmentsWithNames);
-    } catch (error: any) {
+      setBookings(bookingsResult.data as unknown as RoomBooking[] || []);
+    } catch (error) {
       console.error('Error fetching data:', error);
       toast({
         title: "Error",
-        description: `Failed to fetch hostel data: ${error?.message || 'Unknown error'}`,
+        description: "Failed to fetch hostel data",
         variant: "destructive",
       });
     } finally {
@@ -292,53 +198,6 @@ export function HostelManagement() {
     }
   };
 
-  const handleAssignStudent = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      const { data: adminProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!adminProfile) throw new Error('Admin profile not found');
-
-      const { error } = await supabase
-        .from('student_hostel_assignments')
-        .insert([{
-          student_id: newAssignment.student_id, // This should be profile.id, not user_id
-          hostel_id: newAssignment.hostel_id,
-          room_id: newAssignment.room_id || null,
-          assigned_by: adminProfile.id,
-          notes: newAssignment.notes
-        }]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Student assigned to hostel successfully",
-      });
-
-      setNewAssignment({
-        student_id: '',
-        hostel_id: '',
-        room_id: '',
-        notes: ''
-      });
-      fetchData();
-    } catch (error) {
-      console.error('Error assigning student:', error);
-      toast({
-        title: "Error",
-        description: "Failed to assign student to hostel",
-        variant: "destructive",
-      });
-    }
-  };
-
   if (loading) {
     return <div className="text-center py-8">Loading hostel data...</div>;
   }
@@ -346,10 +205,9 @@ export function HostelManagement() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="hostels" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="hostels">Hostels</TabsTrigger>
           <TabsTrigger value="rooms">Rooms</TabsTrigger>
-          <TabsTrigger value="assignments">Assignments</TabsTrigger>
           <TabsTrigger value="bookings">Bookings</TabsTrigger>
         </TabsList>
 
@@ -531,146 +389,6 @@ export function HostelManagement() {
                     </div>
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="assignments">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Student Hostel Assignments
-                  </CardTitle>
-                  <CardDescription>Assign students to hostels and rooms</CardDescription>
-                </div>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Assign Student
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Assign Student to Hostel</DialogTitle>
-                      <DialogDescription>Select a student and assign them to a hostel</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="student">Select Student</Label>
-                        <Select value={newAssignment.student_id} onValueChange={(value) => setNewAssignment({...newAssignment, student_id: value})}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select student" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {students.map((student) => (
-                              <SelectItem key={student.id} value={student.id}>
-                                {student.full_name || student.email}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="hostel">Select Hostel</Label>
-                        <Select value={newAssignment.hostel_id} onValueChange={(value) => setNewAssignment({...newAssignment, hostel_id: value})}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select hostel" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {hostels.map((hostel) => (
-                              <SelectItem key={hostel.id} value={hostel.id}>
-                                {hostel.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="room">Select Room (Optional)</Label>
-                        <Select value={newAssignment.room_id} onValueChange={(value) => setNewAssignment({...newAssignment, room_id: value})}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select room (optional)" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {rooms.filter(room => room.hostel_id === newAssignment.hostel_id).map((room) => (
-                              <SelectItem key={room.id} value={room.id}>
-                                Room {room.room_number}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="notes">Notes</Label>
-                        <Textarea
-                          id="notes"
-                          value={newAssignment.notes}
-                          onChange={(e) => setNewAssignment({...newAssignment, notes: e.target.value})}
-                          placeholder="Any additional notes..."
-                        />
-                      </div>
-                      
-                      <Button onClick={handleAssignStudent} className="w-full">
-                        Assign Student
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {hostelAssignments.map((assignment) => (
-                  <div key={assignment.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2">
-                         <div>
-                           <h3 className="font-semibold">
-                             {assignment.student_name}
-                           </h3>
-                           <p className="text-sm text-muted-foreground">
-                             {assignment.student_email}
-                           </p>
-                         </div>
-                         <div>
-                           <p className="text-sm">
-                             Hostel: {assignment.hostel_name}
-                           </p>
-                           {assignment.room_number !== 'N/A' && (
-                             <p className="text-sm text-muted-foreground">
-                               Room: {assignment.room_number}
-                             </p>
-                           )}
-                          <p className="text-sm text-muted-foreground">
-                            Assigned: {new Date(assignment.assigned_at).toLocaleDateString()}
-                          </p>
-                          {assignment.notes && (
-                            <p className="text-sm mt-2">
-                              <strong>Notes:</strong> {assignment.notes}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <Badge variant={assignment.status === 'assigned' ? 'default' : 'secondary'}>
-                        {assignment.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-                
-                {hostelAssignments.length === 0 && (
-                  <p className="text-center text-muted-foreground py-8">
-                    No hostel assignments found
-                  </p>
-                )}
               </div>
             </CardContent>
           </Card>

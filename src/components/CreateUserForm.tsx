@@ -3,29 +3,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -57,57 +38,48 @@ export function CreateUserForm() {
     setGeneratedPassword(null);
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
+      const { data: { session } } = await supabase.auth.getSession();
+      
       if (!session) {
         toast({
           title: "Error",
           description: "You must be logged in to create users",
           variant: "destructive",
         });
-        setIsLoading(false);
         return;
       }
 
-      const response = await supabase.functions.invoke("createUser", {
-        body: JSON.stringify({
+      const { data: result, error } = await supabase.functions.invoke('create-user', {
+        body: {
           email: data.email,
           fullName: data.fullName,
           role: data.role,
-        }),
+        },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
-          "Content-Type": "application/json",
         },
       });
 
-      if (response.error) {
+      if (error) {
+        console.error('Edge function error:', error);
         toast({
           title: "Error",
-          description: response.error.message || "Failed to create user.",
+          description: "Failed to create user. Please try again.",
           variant: "destructive",
         });
-        setIsLoading(false);
         return;
       }
 
-      if (response.data?.password) {
-        setGeneratedPassword(response.data.password);
+      if (result?.password) {
+        setGeneratedPassword(result.password);
         toast({
           title: "Success",
-          description: `User created successfully! Password: ${response.data.password}`,
+          description: `User created successfully! Password: ${result.password}`,
         });
         form.reset();
-      } else {
-        toast({
-          title: "Warning",
-          description: "User created, but no password was returned.",
-        });
       }
     } catch (error) {
-      console.error("Error creating user:", error);
+      console.error('Error creating user:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -142,6 +114,7 @@ export function CreateUserForm() {
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="email"
@@ -155,6 +128,7 @@ export function CreateUserForm() {
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="role"
@@ -176,11 +150,13 @@ export function CreateUserForm() {
                 </FormItem>
               )}
             />
+
             <Button type="submit" disabled={isLoading} className="w-full">
               {isLoading ? "Creating..." : "Create User"}
             </Button>
           </form>
         </Form>
+
         {generatedPassword && (
           <div className="mt-6 p-4 bg-muted rounded-lg">
             <h3 className="font-semibold text-sm mb-2">Generated Password</h3>
