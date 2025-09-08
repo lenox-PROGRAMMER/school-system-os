@@ -64,7 +64,17 @@ export function CreateUserForm() {
         console.error('Edge function error:', error);
         toast({
           title: "Error",
-          description: "Failed to create user. Please try again.",
+          description: error.message || "Failed to create user. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (result?.error) {
+        console.error('Server error:', result.error);
+        toast({
+          title: "Error", 
+          description: result.error,
           variant: "destructive",
         });
         return;

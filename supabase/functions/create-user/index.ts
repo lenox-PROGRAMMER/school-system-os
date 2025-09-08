@@ -52,9 +52,22 @@ serve(async (req) => {
       .from('profiles')
       .select('role')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
-    if (profileError || profile?.role !== 'admin') {
+    console.log('Profile check:', { profile, profileError, userId: user.id })
+
+    if (profileError) {
+      console.error('Profile error:', profileError)
+      return new Response(
+        JSON.stringify({ error: 'Database error while checking user role.' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    if (!profile || profile?.role !== 'admin') {
       return new Response(
         JSON.stringify({ error: 'Access denied. Admin privileges required.' }),
         { 
