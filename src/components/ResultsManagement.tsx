@@ -41,6 +41,7 @@ interface Course {
 }
 
 interface Student {
+  id: string;
   user_id: string;
   full_name: string | null;
   email: string;
@@ -77,7 +78,7 @@ export function ResultsManagement() {
           `)
           .order('created_at', { ascending: false }),
         supabase.from('courses').select('id, title, course_code'),
-        supabase.from('profiles').select('user_id, full_name, email').eq('role', 'student')
+        supabase.from('profiles').select('id, user_id, full_name, email').eq('role', 'student')
       ]);
 
       if (resultsResult.error) throw resultsResult.error;
@@ -270,9 +271,9 @@ export function ResultsManagement() {
                           <SelectTrigger>
                             <SelectValue placeholder="Select student" />
                           </SelectTrigger>
-                          <SelectContent>
-                            {students.filter(student => student.user_id).map((student) => (
-                              <SelectItem key={student.user_id} value={student.user_id}>
+                           <SelectContent>
+                            {students.filter(student => student.id).map((student) => (
+                              <SelectItem key={student.id} value={student.id}>
                                 {student.full_name || student.email}
                               </SelectItem>
                             ))}

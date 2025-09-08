@@ -138,7 +138,7 @@ serve(async (req) => {
     const { error: profileError2 } = await supabaseAdmin
       .from('profiles')
       .insert({
-        id: crypto.randomUUID(),
+        id: authData.user.id, // Use the auth user ID as the profile ID
         user_id: authData.user.id,
         full_name: fullName,
         email: email,
