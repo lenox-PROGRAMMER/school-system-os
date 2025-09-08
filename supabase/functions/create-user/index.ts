@@ -51,7 +51,7 @@ serve(async (req) => {
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
       .select('role')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .maybeSingle()
 
     console.log('Profile check:', { profile, profileError, userId: user.id })
