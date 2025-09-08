@@ -306,8 +306,8 @@ export function UserManagement({ userType }: UserManagementProps) {
                                   <SelectValue placeholder="Select lecturer" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {profiles.filter(p => p.role === 'lecturer').map((lecturer) => (
-                                    <SelectItem key={lecturer.user_id} value={lecturer.user_id || ''}>
+                                  {profiles.filter(p => p.role === 'lecturer' && p.user_id).map((lecturer) => (
+                                    <SelectItem key={lecturer.user_id} value={lecturer.user_id}>
                                       {lecturer.full_name || lecturer.email}
                                     </SelectItem>
                                   ))}

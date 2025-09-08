@@ -271,8 +271,8 @@ export function ResultsManagement() {
                             <SelectValue placeholder="Select student" />
                           </SelectTrigger>
                           <SelectContent>
-                            {students.map((student) => (
-                              <SelectItem key={student.user_id} value={student.user_id || ''}>
+                            {students.filter(student => student.user_id).map((student) => (
+                              <SelectItem key={student.user_id} value={student.user_id}>
                                 {student.full_name || student.email}
                               </SelectItem>
                             ))}
