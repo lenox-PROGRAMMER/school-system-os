@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Textarea } from "@/components/ui/textarea";
+import { Edit, Trash2, MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface Hostel {
   id: string;
@@ -95,6 +98,10 @@ export function HostelManagement() {
   const [openHostelDialog, setOpenHostelDialog] = useState(false);
   const [openRoomDialog, setOpenRoomDialog] = useState(false);
   const [openAssignDialog, setOpenAssignDialog] = useState(false);
+  const [editingHostel, setEditingHostel] = useState<Hostel | null>(null);
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [openEditHostelDialog, setOpenEditHostelDialog] = useState(false);
+  const [openEditRoomDialog, setOpenEditRoomDialog] = useState(false);
 
   const hostelForm = useForm<HostelFormData>({
     defaultValues: {
@@ -121,6 +128,25 @@ export function HostelManagement() {
       hostel_id: "",
       room_id: "",
       notes: "",
+    },
+  });
+
+  const editHostelForm = useForm<HostelFormData>({
+    defaultValues: {
+      name: "",
+      description: "",
+      total_rooms: 0,
+    },
+  });
+
+  const editRoomForm = useForm<RoomFormData>({
+    defaultValues: {
+      hostel_id: "",
+      room_number: "",
+      capacity: 1,
+      price: 0,
+      amenities: "",
+      status: "available",
     },
   });
 
@@ -367,6 +393,203 @@ export function HostelManagement() {
       toast({
         title: "Error",
         description: "Failed to update booking",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditHostel = (hostel: Hostel) => {
+    setEditingHostel(hostel);
+    editHostelForm.reset({
+      name: hostel.name,
+      description: hostel.description,
+      total_rooms: hostel.total_rooms,
+    });
+    setOpenEditHostelDialog(true);
+  };
+
+  const handleEditRoom = (room: Room) => {
+    setEditingRoom(room);
+    editRoomForm.reset({
+      hostel_id: room.hostel_id,
+      room_number: room.room_number,
+      capacity: room.capacity,
+      price: room.price || 0,
+      amenities: room.amenities?.join(", ") || "",
+      status: room.status,
+    });
+    setOpenEditRoomDialog(true);
+  };
+
+  const onUpdateHostel = async (data: HostelFormData) => {
+    if (!editingHostel) return;
+
+    try {
+      const { error } = await supabase
+        .from("hostels")
+        .update(data)
+        .eq("id", editingHostel.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Hostel updated successfully",
+      });
+
+      setOpenEditHostelDialog(false);
+      setEditingHostel(null);
+      editHostelForm.reset();
+      fetchHostels();
+    } catch (error) {
+      console.error("Error updating hostel:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update hostel",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const onUpdateRoom = async (data: RoomFormData) => {
+    if (!editingRoom) return;
+
+    try {
+      const amenitiesArray = data.amenities 
+        ? data.amenities.split(",").map(item => item.trim())
+        : [];
+
+      const roomData = {
+        hostel_id: data.hostel_id,
+        room_number: data.room_number,
+        capacity: data.capacity,
+        price: data.price,
+        amenities: amenitiesArray,
+        status: data.status,
+      };
+
+      const { error } = await supabase
+        .from("rooms")
+        .update(roomData)
+        .eq("id", editingRoom.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Room updated successfully",
+      });
+
+      setOpenEditRoomDialog(false);
+      setEditingRoom(null);
+      editRoomForm.reset();
+      fetchRooms();
+    } catch (error) {
+      console.error("Error updating room:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update room",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteHostel = async (hostelId: string) => {
+    try {
+      // Check if hostel has rooms
+      const { data: rooms } = await supabase
+        .from("rooms")
+        .select("id")
+        .eq("hostel_id", hostelId);
+
+      if (rooms && rooms.length > 0) {
+        toast({
+          title: "Error",
+          description: "Cannot delete hostel with existing rooms. Delete all rooms first.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from("hostels")
+        .delete()
+        .eq("id", hostelId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Hostel deleted successfully",
+      });
+
+      fetchHostels();
+    } catch (error) {
+      console.error("Error deleting hostel:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete hostel",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteRoom = async (roomId: string) => {
+    try {
+      // Check if room is occupied
+      const room = rooms.find(r => r.id === roomId);
+      if (room && room.occupied > 0) {
+        toast({
+          title: "Error",
+          description: "Cannot delete room with occupants. Remove all occupants first.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from("rooms")
+        .delete()
+        .eq("id", roomId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Room deleted successfully",
+      });
+
+      fetchRooms();
+    } catch (error) {
+      console.error("Error deleting room:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete room",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateRoomStatus = async (roomId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from("rooms")
+        .update({ status: newStatus })
+        .eq("id", roomId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Room status updated successfully",
+      });
+
+      fetchRooms();
+    } catch (error) {
+      console.error("Error updating room status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update room status",
         variant: "destructive",
       });
     }
@@ -707,6 +930,7 @@ export function HostelManagement() {
                 <TableHead>Description</TableHead>
                 <TableHead>Total Rooms</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -716,6 +940,28 @@ export function HostelManagement() {
                   <TableCell>{hostel.description}</TableCell>
                   <TableCell>{hostel.total_rooms}</TableCell>
                   <TableCell>{new Date(hostel.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditHostel(hostel)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteHostel(hostel.id)}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -740,6 +986,7 @@ export function HostelManagement() {
                 <TableHead>Price</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Amenities</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -753,12 +1000,46 @@ export function HostelManagement() {
                     <TableCell>{room.occupied}</TableCell>
                     <TableCell>{room.price ? `$${room.price}` : "N/A"}</TableCell>
                     <TableCell>
-                      <Badge variant={room.status === "available" ? "default" : "secondary"}>
-                        {room.status}
-                      </Badge>
+                      <Select value={room.status} onValueChange={(value) => handleUpdateRoomStatus(room.id, value)}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue>
+                            <Badge variant={room.status === "available" ? "default" : "secondary"}>
+                              {room.status}
+                            </Badge>
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="available">Available</SelectItem>
+                          <SelectItem value="occupied">Occupied</SelectItem>
+                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          <SelectItem value="reserved">Reserved</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
                       {room.amenities?.join(", ") || "None"}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditRoom(room)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDeleteRoom(room.id)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 );
