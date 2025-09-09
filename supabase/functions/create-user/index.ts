@@ -51,13 +51,19 @@ serve(async (req) => {
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
       .select('role')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .maybeSingle()
 
-    console.log('Profile check:', { profile, profileError, userId: user.id })
+    console.log('Admin check details:', { 
+      userId: user.id, 
+      profile, 
+      profileError, 
+      profileExists: !!profile,
+      profileRole: profile?.role 
+    })
 
     if (profileError) {
-      console.error('Profile error:', profileError)
+      console.error('Profile query error:', profileError)
       return new Response(
         JSON.stringify({ error: 'Database error while checking user role.' }),
         { 
@@ -67,7 +73,19 @@ serve(async (req) => {
       )
     }
 
-    if (!profile || profile?.role !== 'admin') {
+    if (!profile) {
+      console.error('No profile found for user:', user.id)
+      return new Response(
+        JSON.stringify({ error: 'User profile not found.' }),
+        { 
+          status: 403, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    if (profile.role !== 'admin') {
+      console.error('User role is not admin:', { role: profile.role, userId: user.id })
       return new Response(
         JSON.stringify({ error: 'Access denied. Admin privileges required.' }),
         { 
@@ -76,6 +94,8 @@ serve(async (req) => {
         }
       )
     }
+
+    console.log('Admin check passed for user:', user.id)
 
     // Parse request body
     const { email, fullName, role } = await req.json()
