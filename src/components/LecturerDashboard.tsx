@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { LecturerCourses } from "@/components/LecturerCourses";
 import { LecturerAssignments } from "@/components/LecturerAssignments";
 import { LecturerStudents } from "@/components/LecturerStudents";
+import { LecturerStudentHostels } from "@/components/LecturerStudentHostels";
 
 export function LecturerDashboard() {
   const { profile } = useAuth();
@@ -49,10 +50,11 @@ export function LecturerDashboard() {
         </div>
 
         <Tabs defaultValue="courses" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="courses">My Courses</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
+            <TabsTrigger value="hostels">Student Hostels</TabsTrigger>
           </TabsList>
 
           <TabsContent value="courses">
@@ -65,6 +67,10 @@ export function LecturerDashboard() {
 
           <TabsContent value="students">
             <LecturerStudents />
+          </TabsContent>
+
+          <TabsContent value="hostels">
+            <LecturerStudentHostels />
           </TabsContent>
         </Tabs>
       </div>
