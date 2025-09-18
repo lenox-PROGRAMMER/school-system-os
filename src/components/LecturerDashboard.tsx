@@ -7,6 +7,7 @@ import { LecturerCourses } from "@/components/LecturerCourses";
 import { LecturerAssignments } from "@/components/LecturerAssignments";
 import { LecturerStudents } from "@/components/LecturerStudents";
 import { LecturerStudentHostels } from "@/components/LecturerStudentHostels";
+import { CreateAssignment } from "@/components/CreateAssignment";
 
 export function LecturerDashboard() {
   const { profile } = useAuth();
@@ -62,7 +63,10 @@ export function LecturerDashboard() {
           </TabsContent>
 
           <TabsContent value="assignments">
-            <LecturerAssignments />
+            <div className="space-y-6">
+              <CreateAssignment />
+              <LecturerAssignments />
+            </div>
           </TabsContent>
 
           <TabsContent value="students">

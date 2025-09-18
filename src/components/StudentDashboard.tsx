@@ -7,6 +7,7 @@ import { StudentCourses } from "@/components/StudentCourses";
 import { StudentAssignments } from "@/components/StudentAssignments";
 import { StudentGrades } from "@/components/StudentGrades";
 import { StudentHostelBooking } from "@/components/StudentHostelBooking";
+import { StudentNotifications } from "@/components/StudentNotifications";
 
 export function StudentDashboard() {
   const { profile } = useAuth();
@@ -50,11 +51,12 @@ export function StudentDashboard() {
         </div>
 
         <Tabs defaultValue="courses" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="courses">My Courses</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="grades">Grades</TabsTrigger>
             <TabsTrigger value="hostel">Hostel Booking</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
 
           <TabsContent value="courses">
@@ -71,6 +73,10 @@ export function StudentDashboard() {
 
           <TabsContent value="hostel">
             <StudentHostelBooking />
+          </TabsContent>
+
+          <TabsContent value="notifications">
+            <StudentNotifications />
           </TabsContent>
         </Tabs>
       </div>

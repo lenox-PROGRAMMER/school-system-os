@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { ViewSubmissions } from "@/components/ViewSubmissions";
 
 interface Assignment {
   id: string;
@@ -98,9 +99,11 @@ export function LecturerAssignments() {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    View Submissions
-                  </Button>
+                  <ViewSubmissions
+                    assignmentId={assignment.id}
+                    assignmentTitle={assignment.title}
+                    maxPoints={assignment.max_points}
+                  />
                   <Button variant="outline" size="sm">
                     Edit
                   </Button>

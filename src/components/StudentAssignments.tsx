@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { SubmissionDialog } from "@/components/SubmissionDialog";
 
 interface Assignment {
   id: string;
@@ -136,9 +137,11 @@ export function StudentAssignments() {
                 </div>
                 <div className="flex gap-2">
                   {!assignment.submission ? (
-                    <Button size="sm">
-                      Submit
-                    </Button>
+                    <SubmissionDialog
+                      assignmentId={assignment.id}
+                      assignmentTitle={assignment.title}
+                      onSubmissionComplete={fetchMyAssignments}
+                    />
                   ) : (
                     <Button variant="outline" size="sm">
                       View Submission
