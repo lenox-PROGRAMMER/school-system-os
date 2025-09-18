@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,48 +10,21 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
 
-interface Course {
-  id: string;
-  title: string;
-  course_code: string;
-}
-
 export function CreateAssignment() {
-  const [courses, setCourses] = useState<Course[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    course_id: "",
+    course_name: "",
     due_date: "",
     max_points: "100",
   });
   const { profile } = useAuth();
 
-  useEffect(() => {
-    if (profile?.id) {
-      fetchCourses();
-    }
-  }, [profile]);
-
-  const fetchCourses = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('courses')
-        .select('id, title, course_code')
-        .eq('lecturer_id', profile?.id);
-
-      if (error) throw error;
-      setCourses(data || []);
-    } catch (error) {
-      console.error('Error fetching courses:', error);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.course_id) {
+    if (!formData.title || !formData.course_name) {
       toast({
         title: "Error",
         description: "Please fill in required fields",
@@ -63,12 +35,42 @@ export function CreateAssignment() {
 
     setLoading(true);
     try {
+      // First, find or create the course
+      let courseId = "";
+      
+      // Try to find existing course by name or code
+      const { data: existingCourse } = await supabase
+        .from('courses')
+        .select('id')
+        .or(`title.ilike.%${formData.course_name}%,course_code.ilike.%${formData.course_name}%`)
+        .limit(1)
+        .single();
+
+      if (existingCourse) {
+        courseId = existingCourse.id;
+      } else {
+        // Create new course
+        const { data: newCourse, error: courseError } = await supabase
+          .from('courses')
+          .insert({
+            title: formData.course_name,
+            course_code: formData.course_name.toUpperCase().replace(/\s+/g, ''),
+            lecturer_id: profile?.id,
+          })
+          .select('id')
+          .single();
+
+        if (courseError) throw courseError;
+        courseId = newCourse.id;
+      }
+
+      // Create assignment
       const { error } = await supabase
         .from('assignments')
         .insert({
           title: formData.title,
           description: formData.description || null,
-          course_id: formData.course_id,
+          course_id: courseId,
           due_date: formData.due_date || null,
           max_points: formData.max_points ? parseFloat(formData.max_points) : null,
           created_by: profile?.id,
@@ -85,7 +87,7 @@ export function CreateAssignment() {
       setFormData({
         title: "",
         description: "",
-        course_id: "",
+        course_name: "",
         due_date: "",
         max_points: "100",
       });
@@ -138,22 +140,17 @@ export function CreateAssignment() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="course">Course *</Label>
-                <Select
-                  value={formData.course_id}
-                  onValueChange={(value) => setFormData({ ...formData, course_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a course" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {courses.map((course) => (
-                      <SelectItem key={course.id} value={course.id}>
-                        {course.course_code} - {course.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="course_name">Course Name/Code *</Label>
+                <Input
+                  id="course_name"
+                  value={formData.course_name}
+                  onChange={(e) => setFormData({ ...formData, course_name: e.target.value })}
+                  placeholder="Enter course name or code (e.g., CS101, Mathematics)"
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  If course doesn't exist, it will be created automatically
+                </p>
               </div>
 
               <div className="space-y-2">
