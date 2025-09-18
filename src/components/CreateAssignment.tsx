@@ -149,7 +149,7 @@ export function CreateAssignment() {
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  If course doesn't exist, it will be created automatically
+                  only the course you are registered to.
                 </p>
               </div>
 
