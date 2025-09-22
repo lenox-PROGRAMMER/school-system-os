@@ -18,11 +18,11 @@ export function StudentDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-background p-3 sm:p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Student Dashboard</h1>
-          <Button onClick={handleLogout} variant="outline">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold">Student Dashboard</h1>
+          <Button onClick={handleLogout} variant="outline" className="self-end sm:self-auto">
             Logout
           </Button>
         </div>
@@ -36,10 +36,10 @@ export function StudentDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{profile?.email}</p>
+                  <p className="font-medium break-all">{profile?.email}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Role</p>
@@ -51,12 +51,12 @@ export function StudentDashboard() {
         </div>
 
         <Tabs defaultValue="courses" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="courses">My Courses</TabsTrigger>
-            <TabsTrigger value="assignments">Assignments</TabsTrigger>
-            <TabsTrigger value="grades">Grades</TabsTrigger>
-            <TabsTrigger value="hostel">Hostel Booking</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1">
+            <TabsTrigger value="courses" className="text-xs sm:text-sm">My Courses</TabsTrigger>
+            <TabsTrigger value="assignments" className="text-xs sm:text-sm">Assignments</TabsTrigger>
+            <TabsTrigger value="grades" className="text-xs sm:text-sm">Grades</TabsTrigger>
+            <TabsTrigger value="hostel" className="text-xs sm:text-sm">Hostel Booking</TabsTrigger>
+            <TabsTrigger value="notifications" className="text-xs sm:text-sm">Notifications</TabsTrigger>
           </TabsList>
 
           <TabsContent value="courses">

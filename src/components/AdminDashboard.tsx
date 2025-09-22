@@ -20,11 +20,11 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-background p-3 sm:p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <Button onClick={handleLogout} variant="outline">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
+          <Button onClick={handleLogout} variant="outline" className="self-end sm:self-auto">
             Logout
           </Button>
         </div>
@@ -38,10 +38,10 @@ export function AdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{profile?.email}</p>
+                  <p className="font-medium break-all">{profile?.email}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Role</p>
@@ -53,15 +53,15 @@ export function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="students" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="students">Students</TabsTrigger>
-            <TabsTrigger value="lecturers">Lecturers</TabsTrigger>
-            <TabsTrigger value="courses">Courses</TabsTrigger>
-            <TabsTrigger value="hostels">Hostels</TabsTrigger>
-            <TabsTrigger value="calendar">Calendar</TabsTrigger>
-            <TabsTrigger value="results">Results</TabsTrigger>
-            <TabsTrigger value="school">School Data</TabsTrigger>
-            <TabsTrigger value="create">Create User</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1">
+            <TabsTrigger value="students" className="text-xs sm:text-sm">Students</TabsTrigger>
+            <TabsTrigger value="lecturers" className="text-xs sm:text-sm">Lecturers</TabsTrigger>
+            <TabsTrigger value="courses" className="text-xs sm:text-sm">Courses</TabsTrigger>
+            <TabsTrigger value="hostels" className="text-xs sm:text-sm">Hostels</TabsTrigger>
+            <TabsTrigger value="calendar" className="text-xs sm:text-sm">Calendar</TabsTrigger>
+            <TabsTrigger value="results" className="text-xs sm:text-sm">Results</TabsTrigger>
+            <TabsTrigger value="school" className="text-xs sm:text-sm">School Data</TabsTrigger>
+            <TabsTrigger value="create" className="text-xs sm:text-sm">Create User</TabsTrigger>
           </TabsList>
 
           <TabsContent value="students">
