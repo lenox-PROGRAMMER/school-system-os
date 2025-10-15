@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { CreateUserForm } from "@/components/CreateUserForm";
@@ -54,9 +54,12 @@ export function AdminDashboard() {
         <main className="flex-1 overflow-auto">
           <header className="sticky top-0 z-10 border-b bg-card shadow-sm">
             <div className="flex items-center justify-between px-6 py-4">
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
-                <p className="text-sm text-muted-foreground">Welcome, {profile?.full_name}</p>
+              <div className="flex items-center gap-4">
+                <SidebarTrigger />
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
+                  <p className="text-sm text-muted-foreground">Welcome, {profile?.full_name}</p>
+                </div>
               </div>
               <Button onClick={handleLogout} variant="outline" size="sm" className="gap-2">
                 <LogOut className="h-4 w-4" />
