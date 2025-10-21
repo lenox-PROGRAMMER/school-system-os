@@ -92,6 +92,22 @@ export function CourseManagement() {
 
   const handleCreateCourse = async () => {
     try {
+      // Check if course code already exists
+      const { data: existing } = await supabase
+        .from('courses')
+        .select('id')
+        .eq('course_code', newCourse.course_code)
+        .maybeSingle();
+
+      if (existing) {
+        toast({
+          title: "Error",
+          description: "A course with this course code already exists",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('courses')
         .insert([newCourse]);
@@ -114,11 +130,11 @@ export function CourseManagement() {
       });
       setShowCreateForm(false);
       fetchCourses();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating course:', error);
       toast({
         title: "Error",
-        description: "Failed to create course",
+        description: error.message || "Failed to create course",
         variant: "destructive",
       });
     }

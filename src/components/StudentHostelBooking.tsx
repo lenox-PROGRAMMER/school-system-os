@@ -86,6 +86,15 @@ export function StudentHostelBooking() {
       if (hostelsError) throw hostelsError;
       setHostels(hostelsData || []);
 
+      // Get profile id first
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profileData) return;
+
       // Fetch user's bookings
       const { data: bookingsData, error: bookingsError } = await supabase
         .from("room_bookings")
@@ -96,7 +105,7 @@ export function StudentHostelBooking() {
             hostel:hostels (name)
           )
         `)
-        .eq("student_id", user.id)
+        .eq("student_id", profileData.id)
         .order("booking_date", { ascending: false });
 
       if (bookingsError) throw bookingsError;
@@ -134,10 +143,19 @@ export function StudentHostelBooking() {
     if (!user) return;
 
     try {
+      // Get the student's profile id
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
       const { error } = await supabase
         .from("room_bookings")
         .insert({
-          student_id: user.id,
+          student_id: profileData.id,
           room_id: data.room_id,
           academic_year: data.academic_year,
           semester: data.semester,
@@ -154,11 +172,11 @@ export function StudentHostelBooking() {
       setOpen(false);
       reset();
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting booking:", error);
       toast({
         title: "Error",
-        description: "Failed to submit booking request",
+        description: error.message || "Failed to submit booking request",
         variant: "destructive",
       });
     }

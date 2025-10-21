@@ -164,6 +164,13 @@ export function UserManagement({ userType }: UserManagementProps) {
 
   const handleDelete = async (profileId: string) => {
     try {
+      // First delete related records
+      await supabase.from('enrollments').delete().eq('student_id', profileId);
+      await supabase.from('submissions').delete().eq('student_id', profileId);
+      await supabase.from('room_bookings').delete().eq('student_id', profileId);
+      await supabase.from('results').delete().eq('student_id', profileId);
+      
+      // Then delete the profile
       const { error } = await supabase
         .from('profiles')
         .delete()
@@ -177,11 +184,11 @@ export function UserManagement({ userType }: UserManagementProps) {
       });
 
       fetchProfiles();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting profile:', error);
       toast({
         title: "Error",
-        description: "Failed to delete user",
+        description: error.message || "Failed to delete user. User may have related records.",
         variant: "destructive",
       });
     }

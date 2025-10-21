@@ -65,6 +65,20 @@ export function StudentGrades() {
 
       if (enrollmentsError) throw enrollmentsError;
 
+      // Get published results
+      const { data: results, error: resultsError } = await supabase
+        .from('results')
+        .select(`
+          grade,
+          points,
+          gpa,
+          courses(title, course_code)
+        `)
+        .eq('student_id', profile?.id)
+        .eq('status', 'published');
+
+      if (resultsError) throw resultsError;
+
       // Group grades by course
       const courseGradesMap = new Map<string, CourseGrade>();
 
@@ -77,6 +91,23 @@ export function StudentGrades() {
           final_grade: enrollment.final_grade,
           assignments: []
         });
+      });
+
+      // Add published results as final grades
+      results?.forEach(result => {
+        const courseCode = result.courses.course_code;
+        const existingCourse = courseGradesMap.get(courseCode);
+        
+        if (existingCourse) {
+          existingCourse.final_grade = parseFloat(result.grade || '0');
+        } else {
+          courseGradesMap.set(courseCode, {
+            course_title: result.courses.title,
+            course_code: courseCode,
+            final_grade: parseFloat(result.grade || '0'),
+            assignments: []
+          });
+        }
       });
 
       // Add assignment grades
