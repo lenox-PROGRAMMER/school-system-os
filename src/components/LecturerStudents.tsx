@@ -29,29 +29,61 @@ export function LecturerStudents() {
 
   const fetchMyStudents = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch students enrolled in lecturer's courses
+      const { data: enrollmentData, error: enrollmentError } = await supabase
         .from('enrollments')
         .select(`
           *,
           profiles!enrollments_student_id_fkey(id, full_name, email),
-          courses!inner(title, course_code)
+          courses!inner(id, title, course_code, lecturer_id)
         `)
-        .eq('courses.lecturer_id', profile?.id)
-        .order('courses.title', { ascending: true });
+        .eq('courses.lecturer_id', profile?.user_id);
 
-      if (error) throw error;
+      if (enrollmentError) throw enrollmentError;
 
-      const studentsData = data?.map(enrollment => ({
+      // Also fetch students directly assigned to this lecturer via lecturer_id
+      const { data: assignedData, error: assignedError } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, lecturer_id')
+        .eq('lecturer_id', profile?.id)
+        .eq('role', 'student');
+
+      if (assignedError) {
+        console.error('Error fetching assigned students:', assignedError);
+      }
+
+      // Combine both sources
+      const enrolledStudents = enrollmentData?.map(enrollment => ({
         id: enrollment.profiles.id,
         full_name: enrollment.profiles.full_name,
         email: enrollment.profiles.email,
         course_title: enrollment.courses.title,
         course_code: enrollment.courses.course_code,
         enrollment_status: enrollment.status,
-        final_grade: enrollment.final_grade
+        final_grade: enrollment.final_grade,
+        source: 'enrollment' as const
       })) || [];
 
-      setStudents(studentsData);
+      const directlyAssigned = assignedData?.map(student => ({
+        id: student.id,
+        full_name: student.full_name,
+        email: student.email,
+        course_title: 'Not enrolled',
+        course_code: 'N/A',
+        enrollment_status: 'assigned',
+        final_grade: null,
+        source: 'assigned' as const
+      })) || [];
+
+      // Merge and deduplicate
+      const allStudents = [...enrolledStudents];
+      directlyAssigned.forEach(assigned => {
+        if (!allStudents.some(s => s.id === assigned.id)) {
+          allStudents.push(assigned);
+        }
+      });
+
+      setStudents(allStudents as any);
     } catch (error) {
       console.error('Error fetching students:', error);
       toast({

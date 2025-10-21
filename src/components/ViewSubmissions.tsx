@@ -18,6 +18,7 @@ interface Submission {
   submitted_at: string;
   grade: number | null;
   feedback: string | null;
+  status?: string;
   profiles: {
     full_name: string;
     email: string;
@@ -40,6 +41,7 @@ export function ViewSubmissions({ assignmentId, assignmentTitle, maxPoints }: Vi
   const [gradeForm, setGradeForm] = useState({
     grade: "",
     feedback: "",
+    status: "pending",
   });
   const { profile } = useAuth();
 
@@ -80,8 +82,59 @@ export function ViewSubmissions({ assignmentId, assignmentTitle, maxPoints }: Vi
     setGradeForm({
       grade: submission.grade?.toString() || "",
       feedback: submission.feedback || "",
+      status: submission.status || "pending",
     });
     setIsGradeDialogOpen(true);
+  };
+
+  const handleApproveSubmission = async (submissionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('submissions')
+        .update({ status: 'approved' })
+        .eq('id', submissionId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Submission approved",
+      });
+
+      fetchSubmissions();
+    } catch (error) {
+      console.error('Error approving submission:', error);
+      toast({
+        title: "Error",
+        description: "Failed to approve submission",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRejectSubmission = async (submissionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('submissions')
+        .update({ status: 'rejected' })
+        .eq('id', submissionId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Submission rejected",
+      });
+
+      fetchSubmissions();
+    } catch (error) {
+      console.error('Error rejecting submission:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reject submission",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleGradeSubmission = async (e: React.FormEvent) => {
@@ -166,12 +219,38 @@ export function ViewSubmissions({ assignmentId, assignmentTitle, maxPoints }: Vi
                           <p className="text-sm text-muted-foreground">{submission.profiles.email}</p>
                         </div>
                         <div className="flex items-center gap-2">
-                          {submission.grade !== null ? (
+                          {submission.status === 'approved' && (
+                            <Badge variant="default" className="bg-green-600">Approved</Badge>
+                          )}
+                          {submission.status === 'rejected' && (
+                            <Badge variant="destructive">Rejected</Badge>
+                          )}
+                          {(!submission.status || submission.status === 'pending') && (
+                            <Badge variant="outline">Pending</Badge>
+                          )}
+                          {submission.grade !== null && (
                             <Badge variant="secondary">
-                              Graded: {submission.grade}/{maxPoints || 100}
+                              {submission.grade}/{maxPoints || 100}
                             </Badge>
-                          ) : (
-                            <Badge variant="outline">Pending Grade</Badge>
+                          )}
+                          {(!submission.status || submission.status === 'pending') && (
+                            <>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleApproveSubmission(submission.id)}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleRejectSubmission(submission.id)}
+                              >
+                                Reject
+                              </Button>
+                            </>
                           )}
                           <Button
                             variant="outline"
