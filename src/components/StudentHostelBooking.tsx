@@ -60,8 +60,11 @@ export function StudentHostelBooking() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const { register, handleSubmit, watch, setValue, reset } = useForm<BookingFormData>();
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<BookingFormData>();
   const selectedHostelId = watch("hostel_id");
+  const selectedRoomId = watch("room_id");
+  const selectedAcademicYear = watch("academic_year");
+  const selectedSemester = watch("semester");
 
   useEffect(() => {
     fetchData();
@@ -141,6 +144,16 @@ export function StudentHostelBooking() {
 
   const onSubmit = async (data: BookingFormData) => {
     if (!user) return;
+
+    // Validate all required fields
+    if (!data.hostel_id || !data.room_id || !data.academic_year || !data.semester) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       // Get the student's profile id
@@ -241,20 +254,26 @@ export function StudentHostelBooking() {
 
                   {selectedHostelId && (
                     <div>
-                      <Label htmlFor="room_id">Select Room</Label>
-                      <Select onValueChange={(value) => setValue("room_id", value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose a room" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {rooms.map((room) => (
-                            <SelectItem key={room.id} value={room.id}>
-                              Room {room.room_number} - Capacity: {room.capacity} 
-                              {room.price && ` - $${room.price}/semester`}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label htmlFor="room_id">Select Room *</Label>
+                      {rooms.length === 0 ? (
+                        <p className="text-sm text-muted-foreground mt-2 p-3 bg-muted rounded-md">
+                          No available rooms in this hostel. Please select a different hostel.
+                        </p>
+                      ) : (
+                        <Select onValueChange={(value) => setValue("room_id", value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose a room" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {rooms.map((room) => (
+                              <SelectItem key={room.id} value={room.id}>
+                                Room {room.room_number} - Capacity: {room.capacity} 
+                                {room.price && ` - $${room.price}/semester`}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                     </div>
                   )}
 
@@ -285,7 +304,11 @@ export function StudentHostelBooking() {
                     </Select>
                   </div>
 
-                  <Button type="submit" className="w-full">
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={!selectedHostelId || !selectedRoomId || !selectedAcademicYear || !selectedSemester}
+                  >
                     Submit Request
                   </Button>
                 </form>
