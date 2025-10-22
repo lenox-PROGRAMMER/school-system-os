@@ -91,7 +91,7 @@ export function ViewSubmissions({ assignmentId, assignmentTitle, maxPoints }: Vi
     try {
       const { error } = await supabase
         .from('submissions')
-        .update({ status: 'approved' })
+        .update({ status: 'approved' } as any)
         .eq('id', submissionId);
 
       if (error) throw error;
@@ -116,7 +116,7 @@ export function ViewSubmissions({ assignmentId, assignmentTitle, maxPoints }: Vi
     try {
       const { error } = await supabase
         .from('submissions')
-        .update({ status: 'rejected' })
+        .update({ status: 'rejected' } as any)
         .eq('id', submissionId);
 
       if (error) throw error;

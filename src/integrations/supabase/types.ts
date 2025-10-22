@@ -556,6 +556,7 @@ export type Database = {
           graded_at: string | null
           graded_by: string | null
           id: string
+          status: string
           student_id: string
           submitted_at: string
         }
@@ -567,6 +568,7 @@ export type Database = {
           graded_at?: string | null
           graded_by?: string | null
           id?: string
+          status?: string
           student_id: string
           submitted_at?: string
         }
@@ -578,6 +580,7 @@ export type Database = {
           graded_at?: string | null
           graded_by?: string | null
           id?: string
+          status?: string
           student_id?: string
           submitted_at?: string
         }

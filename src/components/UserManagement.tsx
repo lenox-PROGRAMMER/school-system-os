@@ -164,11 +164,36 @@ export function UserManagement({ userType }: UserManagementProps) {
 
   const handleDelete = async (profileId: string) => {
     try {
-      // First delete related records
-      await supabase.from('enrollments').delete().eq('student_id', profileId);
-      await supabase.from('submissions').delete().eq('student_id', profileId);
-      await supabase.from('room_bookings').delete().eq('student_id', profileId);
-      await supabase.from('results').delete().eq('student_id', profileId);
+      // First delete related records in the correct order
+      // Delete submissions where student is the submitter
+      await supabase
+        .from('submissions')
+        .delete()
+        .eq('student_id', profileId);
+
+      // Delete enrollments
+      await supabase
+        .from('enrollments')
+        .delete()
+        .eq('student_id', profileId);
+
+      // Delete room bookings
+      await supabase
+        .from('room_bookings')
+        .delete()
+        .eq('student_id', profileId);
+
+      // Delete results
+      await supabase
+        .from('results')
+        .delete()
+        .eq('student_id', profileId);
+
+      // If user is a lecturer, unassign them from courses instead of deleting
+      await supabase
+        .from('courses')
+        .update({ lecturer_id: null })
+        .eq('lecturer_id', profileId);
       
       // Then delete the profile
       const { error } = await supabase

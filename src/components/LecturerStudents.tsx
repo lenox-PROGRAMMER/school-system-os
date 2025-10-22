@@ -14,6 +14,7 @@ interface Student {
   course_code: string;
   enrollment_status: string;
   final_grade: number | null;
+  source?: 'enrollment' | 'assigned';
 }
 
 export function LecturerStudents() {
@@ -76,14 +77,14 @@ export function LecturerStudents() {
       })) || [];
 
       // Merge and deduplicate
-      const allStudents = [...enrolledStudents];
+      const allStudents: Student[] = [...enrolledStudents];
       directlyAssigned.forEach(assigned => {
         if (!allStudents.some(s => s.id === assigned.id)) {
           allStudents.push(assigned);
         }
       });
 
-      setStudents(allStudents as any);
+      setStudents(allStudents);
     } catch (error) {
       console.error('Error fetching students:', error);
       toast({
