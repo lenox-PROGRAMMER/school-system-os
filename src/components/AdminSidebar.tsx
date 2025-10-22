@@ -1,4 +1,4 @@
-import { Users, GraduationCap, BookOpen, Building2, Calendar, FileText, Database, UserPlus } from "lucide-react";
+import { Users, GraduationCap, BookOpen, Building2, Calendar, FileText, Database, UserPlus, DollarSign } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -22,6 +22,7 @@ const menuItems = [
   { id: "hostels", label: "Hostels", icon: Building2 },
   { id: "calendar", label: "Calendar", icon: Calendar },
   { id: "results", label: "Results", icon: FileText },
+  { id: "fees", label: "Fee Management", icon: DollarSign },
   { id: "school", label: "School Data", icon: Database },
   { id: "create", label: "Create User", icon: UserPlus },
 ];

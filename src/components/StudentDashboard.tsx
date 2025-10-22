@@ -12,6 +12,7 @@ import { StudentCourses } from "@/components/StudentCourses";
 import { StudentAssignments } from "@/components/StudentAssignments";
 import { StudentGrades } from "@/components/StudentGrades";
 import { StudentHostelBooking } from "@/components/StudentHostelBooking";
+import { StudentPayments } from "@/components/StudentPayments";
 import { StudentNotifications } from "@/components/StudentNotifications";
 import { StudentSidebar } from "@/components/StudentSidebar";
 import { LogOut, KeyRound } from "lucide-react";
@@ -85,6 +86,8 @@ export function StudentDashboard() {
         return <StudentGrades />;
       case "hostel":
         return <StudentHostelBooking />;
+      case "payments":
+        return <StudentPayments />;
       case "notifications":
         return <StudentNotifications />;
       default:

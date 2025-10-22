@@ -11,6 +11,7 @@ import { SchoolDataManagement } from "@/components/SchoolDataManagement";
 import { HostelManagement } from "@/components/HostelManagement";
 import { AcademicCalendar } from "@/components/AcademicCalendar";
 import { ResultsManagement } from "@/components/ResultsManagement";
+import { FeeManagement } from "@/components/FeeManagement";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { LogOut } from "lucide-react";
 
@@ -37,6 +38,8 @@ export function AdminDashboard() {
         return <AcademicCalendar />;
       case "results":
         return <ResultsManagement />;
+      case "fees":
+        return <FeeManagement />;
       case "school":
         return <SchoolDataManagement />;
       case "create":

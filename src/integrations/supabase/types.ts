@@ -196,6 +196,90 @@ export type Database = {
           },
         ]
       }
+      fee_accounts: {
+        Row: {
+          academic_year: string
+          amount_paid: number
+          balance: number | null
+          created_at: string
+          id: string
+          semester: string
+          student_id: string
+          total_fees: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          academic_year: string
+          amount_paid?: number
+          balance?: number | null
+          created_at?: string
+          id?: string
+          semester: string
+          student_id: string
+          total_fees?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          academic_year?: string
+          amount_paid?: number
+          balance?: number | null
+          created_at?: string
+          id?: string
+          semester?: string
+          student_id?: string
+          total_fees?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      fee_payments: {
+        Row: {
+          academic_year: string
+          admin_notes: string | null
+          amount: number
+          id: string
+          payment_slip_url: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          semester: string
+          status: string
+          student_id: string
+          submitted_at: string
+          transaction_message: string | null
+        }
+        Insert: {
+          academic_year: string
+          admin_notes?: string | null
+          amount: number
+          id?: string
+          payment_slip_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          semester: string
+          status?: string
+          student_id: string
+          submitted_at?: string
+          transaction_message?: string | null
+        }
+        Update: {
+          academic_year?: string
+          admin_notes?: string | null
+          amount?: number
+          id?: string
+          payment_slip_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          semester?: string
+          status?: string
+          student_id?: string
+          submitted_at?: string
+          transaction_message?: string | null
+        }
+        Relationships: []
+      }
       hostels: {
         Row: {
           created_at: string

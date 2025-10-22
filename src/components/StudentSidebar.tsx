@@ -1,4 +1,4 @@
-import { BookOpen, FileText, Award, Building2, Bell, Menu } from "lucide-react";
+import { BookOpen, FileText, Award, Building2, DollarSign, Bell, Menu } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -21,6 +21,7 @@ const menuItems = [
   { id: "assignments", label: "Assignments", icon: FileText },
   { id: "grades", label: "Grades", icon: Award },
   { id: "hostel", label: "Hostel Booking", icon: Building2 },
+  { id: "payments", label: "Fee Payments", icon: DollarSign },
   { id: "notifications", label: "Notifications", icon: Bell },
 ];
 
