@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -16,13 +18,22 @@ const createUserSchema = z.object({
   role: z.enum(["student", "lecturer"], {
     required_error: "Please select a role",
   }),
+  courseIds: z.array(z.string()).optional(),
 });
 
 type CreateUserFormData = z.infer<typeof createUserSchema>;
 
+interface Course {
+  id: string;
+  title: string;
+  course_code: string;
+}
+
 export function CreateUserForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
 
   const form = useForm<CreateUserFormData>({
     resolver: zodResolver(createUserSchema),
@@ -30,8 +41,35 @@ export function CreateUserForm() {
       fullName: "",
       email: "",
       role: "student",
+      courseIds: [],
     },
   });
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('id, title, course_code')
+        .order('title');
+
+      if (error) throw error;
+      setCourses(data || []);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+    }
+  };
+
+  const handleCourseToggle = (courseId: string) => {
+    setSelectedCourses(prev =>
+      prev.includes(courseId)
+        ? prev.filter(id => id !== courseId)
+        : [...prev, courseId]
+    );
+  };
 
   const onSubmit = async (data: CreateUserFormData) => {
     setIsLoading(true);
@@ -80,6 +118,55 @@ export function CreateUserForm() {
         return;
       }
 
+      // Get the created user's profile ID
+      if (result?.userId) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', result.userId)
+          .single();
+
+        if (profileData && selectedCourses.length > 0) {
+          // Assign courses to the user
+          if (data.role === 'student') {
+            // Enroll student in selected courses
+            const enrollments = selectedCourses.map(courseId => ({
+              student_id: profileData.id,
+              course_id: courseId,
+              status: 'active',
+            }));
+
+            const { error: enrollError } = await supabase
+              .from('enrollments')
+              .insert(enrollments);
+
+            if (enrollError) {
+              console.error('Error enrolling student:', enrollError);
+              toast({
+                title: "Warning",
+                description: "User created but failed to enroll in courses",
+                variant: "destructive",
+              });
+            }
+          } else if (data.role === 'lecturer') {
+            // Assign lecturer to selected courses
+            const { error: assignError } = await supabase
+              .from('courses')
+              .update({ lecturer_id: result.userId })
+              .in('id', selectedCourses);
+
+            if (assignError) {
+              console.error('Error assigning lecturer:', assignError);
+              toast({
+                title: "Warning",
+                description: "User created but failed to assign to courses",
+                variant: "destructive",
+              });
+            }
+          }
+        }
+      }
+
       if (result?.password) {
         setGeneratedPassword(result.password);
         toast({
@@ -87,6 +174,7 @@ export function CreateUserForm() {
           description: `User created successfully! Password: ${result.password}`,
         });
         form.reset();
+        setSelectedCourses([]);
       }
     } catch (error) {
       console.error('Error creating user:', error);
@@ -105,7 +193,7 @@ export function CreateUserForm() {
       <CardHeader>
         <CardTitle>Create New User</CardTitle>
         <CardDescription>
-          Add a new student or lecturer to the system
+          Add a new student or lecturer to the system and optionally assign them to courses
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -160,6 +248,38 @@ export function CreateUserForm() {
                 </FormItem>
               )}
             />
+
+            {courses.length > 0 && (
+              <div className="space-y-3">
+                <Label>
+                  {form.watch('role') === 'student' 
+                    ? 'Enroll in Courses (Optional)' 
+                    : 'Assign to Courses (Optional)'}
+                </Label>
+                <div className="border rounded-md p-4 max-h-60 overflow-y-auto space-y-2">
+                  {courses.map((course) => (
+                    <div key={course.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={course.id}
+                        checked={selectedCourses.includes(course.id)}
+                        onCheckedChange={() => handleCourseToggle(course.id)}
+                      />
+                      <label
+                        htmlFor={course.id}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {course.title} ({course.course_code})
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                {selectedCourses.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {selectedCourses.length} course(s) selected
+                  </p>
+                )}
+              </div>
+            )}
 
             <Button type="submit" disabled={isLoading} className="w-full">
               {isLoading ? "Creating..." : "Create User"}

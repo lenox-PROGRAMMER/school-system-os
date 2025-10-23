@@ -12,6 +12,7 @@ import { HostelManagement } from "@/components/HostelManagement";
 import { AcademicCalendar } from "@/components/AcademicCalendar";
 import { ResultsManagement } from "@/components/ResultsManagement";
 import { FeeManagement } from "@/components/FeeManagement";
+import { EnrollmentRequests } from "@/components/EnrollmentRequests";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { LogOut } from "lucide-react";
 
@@ -32,6 +33,8 @@ export function AdminDashboard() {
         return <UserManagement userType="lecturer" />;
       case "courses":
         return <CourseManagement />;
+      case "enrollment-requests":
+        return <EnrollmentRequests />;
       case "hostels":
         return <HostelManagement />;
       case "calendar":
