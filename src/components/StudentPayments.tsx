@@ -40,10 +40,29 @@ export const StudentPayments = () => {
   const [amount, setAmount] = useState("");
   const [transactionMessage, setTransactionMessage] = useState("");
   const [paymentSlip, setPaymentSlip] = useState<File | null>(null);
+  const [paybillNumber, setPaybillNumber] = useState("");
+  const [paybillAccountNumber, setPaybillAccountNumber] = useState("");
 
   useEffect(() => {
     fetchData();
+    fetchPaybillInfo();
   }, [user]);
+
+  const fetchPaybillInfo = async () => {
+    try {
+      const { data } = await supabase
+        .from("school_data")
+        .select("paybill_number, paybill_account_number")
+        .single();
+
+      if (data) {
+        setPaybillNumber(data.paybill_number || "");
+        setPaybillAccountNumber(data.paybill_account_number || "");
+      }
+    } catch (error) {
+      console.error("Error fetching paybill info:", error);
+    }
+  };
 
   const fetchData = async () => {
     if (!user || !profile) return;
@@ -186,6 +205,55 @@ export const StudentPayments = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Payment Information Card */}
+      {(paybillNumber || paybillAccountNumber) && (
+        <Card className="border-primary/50 bg-primary/5">
+          <CardHeader>
+            <CardTitle>Payment Instructions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="bg-primary/10 p-2 rounded-lg">
+                  <p className="text-xs font-medium text-primary">STEP 1</p>
+                </div>
+                <div>
+                  <p className="font-medium">Go to M-PESA</p>
+                  <p className="text-sm text-muted-foreground">Select Lipa na M-PESA → Paybill</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="bg-primary/10 p-2 rounded-lg">
+                  <p className="text-xs font-medium text-primary">STEP 2</p>
+                </div>
+                <div>
+                  <p className="font-medium">Enter Paybill Number</p>
+                  <p className="text-2xl font-bold text-primary">{paybillNumber}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="bg-primary/10 p-2 rounded-lg">
+                  <p className="text-xs font-medium text-primary">STEP 3</p>
+                </div>
+                <div>
+                  <p className="font-medium">Enter Account Number</p>
+                  <p className="text-sm text-muted-foreground">{paybillAccountNumber}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="bg-primary/10 p-2 rounded-lg">
+                  <p className="text-xs font-medium text-primary">STEP 4</p>
+                </div>
+                <div>
+                  <p className="font-medium">Enter Amount and Complete</p>
+                  <p className="text-sm text-muted-foreground">Then submit the payment details below</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Payment Submission Form */}
       <Card>

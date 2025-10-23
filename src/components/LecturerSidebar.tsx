@@ -1,4 +1,4 @@
-import { BookOpen, FileText, Users, Building2, Menu } from "lucide-react";
+import { BookOpen, FileText, Users, Building2 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -8,7 +8,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 
 interface LecturerSidebarProps {
@@ -27,13 +26,10 @@ export function LecturerSidebar({ activeTab, onTabChange }: LecturerSidebarProps
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
-        <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
+        <div className="flex items-center p-4 border-b border-sidebar-border">
           <h2 className="text-lg font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
             Lecturer Portal
           </h2>
-          <SidebarTrigger className="text-sidebar-foreground">
-            <Menu className="h-5 w-5" />
-          </SidebarTrigger>
         </div>
         
         <SidebarGroup>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -103,9 +103,12 @@ export function StudentDashboard() {
         <main className="flex-1 overflow-auto">
           <header className="sticky top-0 z-10 border-b bg-card shadow-sm">
             <div className="flex items-center justify-between px-6 py-4">
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Student Dashboard</h1>
-                <p className="text-sm text-muted-foreground">Welcome, {profile?.full_name}</p>
+              <div className="flex items-center gap-4">
+                <SidebarTrigger />
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">Student Dashboard</h1>
+                  <p className="text-sm text-muted-foreground">Welcome, {profile?.full_name}</p>
+                </div>
               </div>
               <div className="flex gap-2">
                 <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>

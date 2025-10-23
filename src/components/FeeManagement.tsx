@@ -55,10 +55,30 @@ export const FeeManagement = () => {
   const [totalFees, setTotalFees] = useState("");
   const [academicYear, setAcademicYear] = useState("");
   const [semester, setSemester] = useState("");
+  const [paybillNumber, setPaybillNumber] = useState("");
+  const [paybillAccountNumber, setPaybillAccountNumber] = useState("");
+  const [showPaybillDialog, setShowPaybillDialog] = useState(false);
 
   useEffect(() => {
     fetchData();
+    fetchPaybillInfo();
   }, []);
+
+  const fetchPaybillInfo = async () => {
+    try {
+      const { data } = await supabase
+        .from("school_data")
+        .select("*")
+        .single();
+
+      if (data) {
+        setPaybillNumber(data.paybill_number || "");
+        setPaybillAccountNumber(data.paybill_account_number || "");
+      }
+    } catch (error) {
+      console.error("Error fetching paybill info:", error);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -248,12 +268,86 @@ export const FeeManagement = () => {
     }
   };
 
+  const handleUpdatePaybill = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    try {
+      const { data: existingData } = await supabase
+        .from("school_data")
+        .select("id")
+        .single();
+
+      if (existingData) {
+        const { error } = await supabase
+          .from("school_data")
+          .update({
+            paybill_number: paybillNumber,
+            paybill_account_number: paybillAccountNumber,
+          })
+          .eq("id", existingData.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("school_data").insert({
+          paybill_number: paybillNumber,
+          paybill_account_number: paybillAccountNumber,
+          created_by: user.id,
+        });
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Paybill Updated",
+        description: "Payment information has been updated for all students",
+      });
+
+      setShowPaybillDialog(false);
+      fetchPaybillInfo();
+    } catch (error: any) {
+      console.error("Error updating paybill:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="space-y-6">
+      {/* Paybill Information Card */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Payment Information</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Students will see this payment information when making fee payments
+            </p>
+          </div>
+          <Button onClick={() => setShowPaybillDialog(true)}>
+            Update Paybill
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Paybill Number</p>
+              <p className="text-lg font-semibold">{paybillNumber || "Not set"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Account Number</p>
+              <p className="text-lg font-semibold">{paybillAccountNumber || "Not set"}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="pending">
         <TabsList>
           <TabsTrigger value="pending">Pending Payments ({pendingPayments.length})</TabsTrigger>
@@ -461,6 +555,41 @@ export const FeeManagement = () => {
             </div>
             <Button type="submit" className="w-full">
               Create Account
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Update Paybill Dialog */}
+      <Dialog open={showPaybillDialog} onOpenChange={setShowPaybillDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Payment Information</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdatePaybill} className="space-y-4">
+            <div>
+              <Label>Paybill Number</Label>
+              <Input
+                value={paybillNumber}
+                onChange={(e) => setPaybillNumber(e.target.value)}
+                placeholder="e.g., 400200"
+                required
+              />
+            </div>
+            <div>
+              <Label>Account Number (Instructions)</Label>
+              <Input
+                value={paybillAccountNumber}
+                onChange={(e) => setPaybillAccountNumber(e.target.value)}
+                placeholder="e.g., Student ID or Account Number"
+                required
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              This information will be displayed to all registered students when they make payments.
+            </p>
+            <Button type="submit" className="w-full">
+              Update Information
             </Button>
           </form>
         </DialogContent>
