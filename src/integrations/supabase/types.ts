@@ -543,6 +543,8 @@ export type Database = {
           created_by: string | null
           id: string
           location: string | null
+          paybill_account_number: string | null
+          paybill_number: string | null
           school_name: string | null
         }
         Insert: {
@@ -550,6 +552,8 @@ export type Database = {
           created_by?: string | null
           id?: string
           location?: string | null
+          paybill_account_number?: string | null
+          paybill_number?: string | null
           school_name?: string | null
         }
         Update: {
@@ -557,6 +561,8 @@ export type Database = {
           created_by?: string | null
           id?: string
           location?: string | null
+          paybill_account_number?: string | null
+          paybill_number?: string | null
           school_name?: string | null
         }
         Relationships: [
@@ -697,10 +703,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_role: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
