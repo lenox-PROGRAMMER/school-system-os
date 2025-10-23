@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface FeeAccount {
   id: string;
@@ -45,47 +46,38 @@ export const StudentPayments = () => {
 
   useEffect(() => {
     fetchData();
-    fetchPaybillInfo();
   }, [user]);
-
-  const fetchPaybillInfo = async () => {
-    try {
-      const { data } = await supabase
-        .from("school_data")
-        .select("paybill_number, paybill_account_number")
-        .single();
-
-      if (data) {
-        setPaybillNumber(data.paybill_number || "");
-        setPaybillAccountNumber(data.paybill_account_number || "");
-      }
-    } catch (error) {
-      console.error("Error fetching paybill info:", error);
-    }
-  };
 
   const fetchData = async () => {
     if (!user || !profile) return;
     
     setLoading(true);
     try {
-      // Fetch fee account
-      const { data: accountData } = await supabase
-        .from("fee_accounts")
-        .select("*")
-        .eq("student_id", profile.id)
-        .single();
+      // Fetch all data in parallel for better performance
+      const [accountResult, paymentsResult, paybillResult] = await Promise.all([
+        supabase
+          .from("fee_accounts")
+          .select("*")
+          .eq("student_id", profile.id)
+          .single(),
+        supabase
+          .from("fee_payments")
+          .select("*")
+          .eq("student_id", profile.id)
+          .order("submitted_at", { ascending: false }),
+        supabase
+          .from("school_data")
+          .select("paybill_number, paybill_account_number")
+          .single()
+      ]);
 
-      setFeeAccount(accountData);
-
-      // Fetch payment history
-      const { data: paymentsData } = await supabase
-        .from("fee_payments")
-        .select("*")
-        .eq("student_id", profile.id)
-        .order("submitted_at", { ascending: false });
-
-      setPayments(paymentsData || []);
+      setFeeAccount(accountResult.data);
+      setPayments(paymentsResult.data || []);
+      
+      if (paybillResult.data) {
+        setPaybillNumber(paybillResult.data.paybill_number || "");
+        setPaybillAccountNumber(paybillResult.data.paybill_account_number || "");
+      }
     } catch (error: any) {
       console.error("Error fetching data:", error);
     } finally {
@@ -163,7 +155,56 @@ export const StudentPayments = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Skeleton className="h-4 w-20 mb-2" />
+                <Skeleton className="h-8 w-24" />
+              </div>
+              <div>
+                <Skeleton className="h-4 w-24 mb-2" />
+                <Skeleton className="h-8 w-24" />
+              </div>
+              <div>
+                <Skeleton className="h-4 w-24 mb-2" />
+                <Skeleton className="h-8 w-24" />
+              </div>
+            </div>
+            <Skeleton className="h-4 w-40 mt-4" />
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-20 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (!feeAccount) {
