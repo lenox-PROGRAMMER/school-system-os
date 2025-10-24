@@ -1,4 +1,4 @@
-import { BookOpen, FileText, Users, Building2 } from "lucide-react";
+import { BookOpen, FileText, Users, Building2, CheckSquare } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +19,7 @@ const menuItems = [
   { id: "courses", label: "My Courses", icon: BookOpen },
   { id: "assignments", label: "Assignments", icon: FileText },
   { id: "students", label: "Students", icon: Users },
+  { id: "attendance", label: "Track Attendance", icon: CheckSquare },
   { id: "hostels", label: "Student Hostels", icon: Building2 },
 ];
 

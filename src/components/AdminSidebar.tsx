@@ -1,4 +1,4 @@
-import { Users, GraduationCap, BookOpen, Building2, Calendar, FileText, Database, UserPlus, DollarSign, ClipboardList } from "lucide-react";
+import { Users, GraduationCap, BookOpen, Building2, Calendar, FileText, Database, UserPlus, DollarSign, ClipboardList, CheckSquare, TrendingUp } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -20,10 +20,12 @@ const menuItems = [
   { id: "lecturers", label: "Lecturers", icon: GraduationCap },
   { id: "courses", label: "Courses", icon: BookOpen },
   { id: "enrollment-requests", label: "Enrollment Requests", icon: ClipboardList },
+  { id: "attendance", label: "Attendance Approvals", icon: CheckSquare },
   { id: "hostels", label: "Hostels", icon: Building2 },
   { id: "calendar", label: "Calendar", icon: Calendar },
   { id: "results", label: "Results", icon: FileText },
   { id: "fees", label: "Fee Management", icon: DollarSign },
+  { id: "analytics", label: "Registration Analytics", icon: TrendingUp },
   { id: "school", label: "School Data", icon: Database },
   { id: "create", label: "Create User", icon: UserPlus },
 ];

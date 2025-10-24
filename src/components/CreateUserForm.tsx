@@ -34,6 +34,8 @@ export function CreateUserForm() {
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
+  const [lecturers, setLecturers] = useState<{ id: string; full_name: string }[]>([]);
+  const [selectedLecturer, setSelectedLecturer] = useState<string>("");
 
   const form = useForm<CreateUserFormData>({
     resolver: zodResolver(createUserSchema),
@@ -47,6 +49,7 @@ export function CreateUserForm() {
 
   useEffect(() => {
     fetchCourses();
+    fetchLecturers();
   }, []);
 
   const fetchCourses = async () => {
@@ -60,6 +63,21 @@ export function CreateUserForm() {
       setCourses(data || []);
     } catch (error) {
       console.error('Error fetching courses:', error);
+    }
+  };
+
+  const fetchLecturers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .eq("role", "lecturer")
+        .order("full_name");
+
+      if (error) throw error;
+      setLecturers(data || []);
+    } catch (error: any) {
+      console.error("Error fetching lecturers:", error);
     }
   };
 
@@ -126,6 +144,14 @@ export function CreateUserForm() {
           .eq('user_id', result.userId)
           .single();
 
+        // Update lecturer assignment if student and lecturer selected
+        if (profileData && data.role === 'student' && selectedLecturer) {
+          await supabase
+            .from('profiles')
+            .update({ lecturer_id: selectedLecturer })
+            .eq('id', profileData.id);
+        }
+
         if (profileData && selectedCourses.length > 0) {
           // Assign courses to the user
           if (data.role === 'student') {
@@ -175,6 +201,7 @@ export function CreateUserForm() {
         });
         form.reset();
         setSelectedCourses([]);
+        setSelectedLecturer("");
       }
     } catch (error) {
       console.error('Error creating user:', error);
@@ -248,6 +275,24 @@ export function CreateUserForm() {
                 </FormItem>
               )}
             />
+
+            {form.watch('role') === 'student' && (
+              <div>
+                <Label htmlFor="lecturer">Assign to Lecturer (Optional)</Label>
+                <Select value={selectedLecturer} onValueChange={setSelectedLecturer}>
+                  <SelectTrigger id="lecturer">
+                    <SelectValue placeholder="Select a lecturer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {lecturers.map((lecturer) => (
+                      <SelectItem key={lecturer.id} value={lecturer.id}>
+                        {lecturer.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {courses.length > 0 && (
               <div className="space-y-3">

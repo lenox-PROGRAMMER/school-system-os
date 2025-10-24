@@ -13,6 +13,8 @@ import { AcademicCalendar } from "@/components/AcademicCalendar";
 import { ResultsManagement } from "@/components/ResultsManagement";
 import { FeeManagement } from "@/components/FeeManagement";
 import { EnrollmentRequests } from "@/components/EnrollmentRequests";
+import { AttendanceApprovals } from "@/components/AttendanceApprovals";
+import { RegistrationChart } from "@/components/RegistrationChart";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { LogOut } from "lucide-react";
 
@@ -35,6 +37,8 @@ export function AdminDashboard() {
         return <CourseManagement />;
       case "enrollment-requests":
         return <EnrollmentRequests />;
+      case "attendance":
+        return <AttendanceApprovals />;
       case "hostels":
         return <HostelManagement />;
       case "calendar":
@@ -43,6 +47,8 @@ export function AdminDashboard() {
         return <ResultsManagement />;
       case "fees":
         return <FeeManagement />;
+      case "analytics":
+        return <RegistrationChart />;
       case "school":
         return <SchoolDataManagement />;
       case "create":
