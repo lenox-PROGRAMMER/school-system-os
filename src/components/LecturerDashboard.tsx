@@ -13,6 +13,7 @@ import { LecturerAssignments } from "@/components/LecturerAssignments";
 import { LecturerStudents } from "@/components/LecturerStudents";
 import { LecturerStudentHostels } from "@/components/LecturerStudentHostels";
 import { LecturerAttendance } from "@/components/LecturerAttendance";
+import { LecturerAttendanceFeedback } from "@/components/LecturerAttendanceFeedback";
 import { CreateAssignment } from "@/components/CreateAssignment";
 import { LecturerSidebar } from "@/components/LecturerSidebar";
 import { LogOut, KeyRound } from "lucide-react";
@@ -91,6 +92,8 @@ export function LecturerDashboard() {
         return <LecturerStudents />;
       case "attendance":
         return <LecturerAttendance />;
+      case "feedback":
+        return <LecturerAttendanceFeedback />;
       case "hostels":
         return <LecturerStudentHostels />;
       default:

@@ -31,6 +31,7 @@ export function CourseManagement() {
   const [lecturers, setLecturers] = useState<Lecturer[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [newCourse, setNewCourse] = useState({
     title: '',
     description: '',
@@ -140,6 +141,109 @@ export function CourseManagement() {
     }
   };
 
+  const handleEditCourse = async () => {
+    if (!editingCourse) return;
+
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .update({
+          title: newCourse.title,
+          description: newCourse.description,
+          course_code: newCourse.course_code,
+          lecturer_id: newCourse.lecturer_id || null,
+          credits: newCourse.credits,
+          semester: newCourse.semester,
+          academic_year: newCourse.academic_year,
+        })
+        .eq('id', editingCourse.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Course updated successfully",
+      });
+
+      setEditingCourse(null);
+      setNewCourse({
+        title: '',
+        description: '',
+        course_code: '',
+        lecturer_id: '',
+        credits: 3,
+        semester: '',
+        academic_year: '',
+      });
+      setShowCreateForm(false);
+      fetchCourses();
+    } catch (error: any) {
+      console.error('Error updating course:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update course",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteCourse = async (courseId: string) => {
+    if (!confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .delete()
+        .eq('id', courseId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Course deleted successfully",
+      });
+
+      fetchCourses();
+    } catch (error: any) {
+      console.error('Error deleting course:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete course",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const startEditCourse = (course: Course) => {
+    setEditingCourse(course);
+    setNewCourse({
+      title: course.title,
+      description: course.description || '',
+      course_code: course.course_code,
+      lecturer_id: course.lecturer_id || '',
+      credits: course.credits || 3,
+      semester: course.semester || '',
+      academic_year: course.academic_year || '',
+    });
+    setShowCreateForm(true);
+  };
+
+  const cancelEdit = () => {
+    setEditingCourse(null);
+    setNewCourse({
+      title: '',
+      description: '',
+      course_code: '',
+      lecturer_id: '',
+      credits: 3,
+      semester: '',
+      academic_year: '',
+    });
+    setShowCreateForm(false);
+  };
+
   if (loading) {
     return <div className="text-center py-8">Loading courses...</div>;
   }
@@ -155,7 +259,7 @@ export function CourseManagement() {
                 Manage all courses in the system
               </CardDescription>
             </div>
-            <Button onClick={() => setShowCreateForm(!showCreateForm)}>
+            <Button onClick={() => showCreateForm ? cancelEdit() : setShowCreateForm(true)}>
               {showCreateForm ? 'Cancel' : 'Create Course'}
             </Button>
           </div>
@@ -163,7 +267,7 @@ export function CourseManagement() {
         <CardContent>
           {showCreateForm && (
             <div className="mb-6 p-4 border rounded-lg space-y-4">
-              <h3 className="font-semibold">Create New Course</h3>
+              <h3 className="font-semibold">{editingCourse ? 'Edit Course' : 'Create New Course'}</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="title">Course Title</Label>
@@ -235,8 +339,8 @@ export function CourseManagement() {
                   placeholder="Course description"
                 />
               </div>
-              <Button onClick={handleCreateCourse} className="w-full">
-                Create Course
+              <Button onClick={editingCourse ? handleEditCourse : handleCreateCourse} className="w-full">
+                {editingCourse ? 'Update Course' : 'Create Course'}
               </Button>
             </div>
           )}
@@ -256,10 +360,18 @@ export function CourseManagement() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => startEditCourse(course)}
+                  >
                     Edit
                   </Button>
-                  <Button variant="destructive" size="sm">
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => handleDeleteCourse(course.id)}
+                  >
                     Delete
                   </Button>
                 </div>

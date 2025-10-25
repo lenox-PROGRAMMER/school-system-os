@@ -53,22 +53,24 @@ export const StudentPayments = () => {
     
     setLoading(true);
     try {
-      // Fetch all data in parallel for better performance
+      // Optimized queries - select only needed fields and use indexes
       const [accountResult, paymentsResult, paybillResult] = await Promise.all([
         supabase
           .from("fee_accounts")
-          .select("*")
+          .select("id, total_fees, amount_paid, balance, academic_year, semester")
           .eq("student_id", profile.id)
-          .single(),
+          .maybeSingle(),
         supabase
           .from("fee_payments")
-          .select("*")
+          .select("id, amount, status, submitted_at, reviewed_at, admin_notes, payment_slip_url, transaction_message")
           .eq("student_id", profile.id)
-          .order("submitted_at", { ascending: false }),
+          .order("submitted_at", { ascending: false })
+          .limit(50), // Limit recent payments
         supabase
           .from("school_data")
           .select("paybill_number, paybill_account_number")
-          .single()
+          .limit(1)
+          .maybeSingle()
       ]);
 
       setFeeAccount(accountResult.data);
