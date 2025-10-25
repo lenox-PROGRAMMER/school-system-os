@@ -37,12 +37,14 @@ export function StudentAssignments() {
   }, [profile]);
 
   const fetchMyAssignments = async () => {
+    if (!profile?.id) return;
+    
     try {
       // First get enrolled courses
       const { data: enrollments, error: enrollError } = await supabase
         .from('enrollments')
         .select('course_id')
-        .eq('student_id', profile?.id)
+        .eq('student_id', profile.id)
         .eq('status', 'active');
 
       if (enrollError) throw enrollError;
@@ -55,32 +57,46 @@ export function StudentAssignments() {
         return;
       }
 
-      // Get assignments for enrolled courses
-      const { data, error } = await supabase
+      // Get assignments for enrolled courses with course details
+      const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('assignments')
         .select(`
           *,
-          courses(title, course_code),
-          submissions!left(id, submitted_at, grade, feedback)
+          courses(title, course_code)
         `)
         .in('course_id', courseIds)
-        .eq('submissions.student_id', profile?.id)
-        .order('due_date', { ascending: true });
+        .order('due_date', { ascending: true, nullsFirst: false });
 
-      if (error) throw error;
+      if (assignmentsError) throw assignmentsError;
 
-      const assignmentsWithSubmissions = data?.map(assignment => ({
+      // Get all submissions for this student
+      const assignmentIds = assignmentsData?.map(a => a.id) || [];
+      
+      const { data: submissionsData, error: submissionsError } = await supabase
+        .from('submissions')
+        .select('id, assignment_id, submitted_at, grade, feedback, status')
+        .eq('student_id', profile.id)
+        .in('assignment_id', assignmentIds);
+
+      if (submissionsError) throw submissionsError;
+
+      // Map submissions to assignments
+      const submissionsMap = new Map(
+        submissionsData?.map(sub => [sub.assignment_id, sub]) || []
+      );
+
+      const assignmentsWithSubmissions = assignmentsData?.map(assignment => ({
         ...assignment,
         course: assignment.courses,
-        submission: assignment.submissions?.[0] || null
+        submission: submissionsMap.get(assignment.id) || null
       })) || [];
 
       setAssignments(assignmentsWithSubmissions);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching assignments:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch assignments",
+        description: error.message || "Failed to fetch assignments",
         variant: "destructive",
       });
     } finally {
