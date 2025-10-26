@@ -115,10 +115,11 @@ export function StudentAssignments() {
   };
 
   const getStatusBadge = (assignment: Assignment) => {
+    if (assignment.submission && assignment.submission.grade !== null && assignment.submission.grade !== undefined) {
+      return <Badge variant="secondary">Graded</Badge>;
+    }
+    
     if (assignment.submission) {
-      if (assignment.submission.grade !== null) {
-        return <Badge variant="secondary">Graded</Badge>;
-      }
       return <Badge variant="default">Submitted</Badge>;
     }
     
@@ -185,7 +186,7 @@ export function StudentAssignments() {
                 )}
               </div>
               
-              {assignment.submission?.feedback && (
+              {assignment.submission && assignment.submission.feedback && (
                 <div className="p-2 bg-muted rounded text-sm">
                   <span className="font-medium">Feedback: </span>
                   {assignment.submission.feedback}
