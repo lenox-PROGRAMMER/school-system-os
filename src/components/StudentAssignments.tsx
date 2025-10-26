@@ -177,7 +177,7 @@ export function StudentAssignments() {
               
               <div className="flex items-center justify-between text-sm">
                 <span>Max Points: {assignment.max_points || 'Not set'}</span>
-                {assignment.submission?.grade !== null && (
+                {assignment.submission && assignment.submission.grade !== null && (
                   <div className="flex items-center gap-1">
                     <span className="text-muted-foreground">Grade:</span>
                     <Badge variant="outline">{assignment.submission.grade}/{assignment.max_points}</Badge>
